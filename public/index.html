@@ -1,0 +1,1607 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Audio Flow · Console</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%231a73e8'/><g fill='%23fff'><rect x='7.4' y='13' width='2.6' height='6' rx='1.3'/><rect x='12' y='9' width='2.6' height='14' rx='1.3'/><rect x='16.6' y='6' width='2.6' height='20' rx='1.3'/><rect x='21.2' y='11' width='2.6' height='10' rx='1.3'/></g></svg>"/>
+<script>(function(){try{var p=new URLSearchParams(location.search).get('theme');var t=p||localStorage.getItem('af-theme')||((window.matchMedia&&matchMedia('(prefers-color-scheme: dark)').matches)?'dark':'light');document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500;700&family=Roboto+Flex:opsz,wght@8..144,400..800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..600,0..1,-25..0&display=swap" rel="stylesheet">
+<style>
+:root{
+  --blue:#1a73e8; --blue-d:#1967d2; --blue-l:#e7f0fe; --blue-l2:#cfe0fc;
+  --green:#137333; --green-l:#e6f4ea; --amber:#f9ab00; --amber-l:#fef7e0;
+  --red:#c5221f; --red-l:#fce8e6;
+  --bg:#e9edf5; --surface:#ffffff; --surface-2:#f3f6fc; --surface-3:#e7edf7;
+  --text:#1a1c1e; --text-2:#44474e; --text-3:#74777f;
+  --outline:#e4e8f1; --outline-2:#eef1f8;
+  --r:20px; --r-sm:14px; --r-xs:10px;
+  --sh:0 1px 2px rgba(28,42,74,.06), 0 1px 3px rgba(28,42,74,.05);
+  --sh-2:0 2px 8px rgba(28,42,74,.10), 0 10px 28px rgba(28,42,74,.08);
+  --flow:5s;
+}
+html[data-theme="dark"]{
+  color-scheme:dark;
+  --blue:#a8c7fa; --blue-d:#c2d7fc; --blue-l:rgba(138,180,248,.16); --blue-l2:rgba(138,180,248,.30);
+  --green:#7fca94; --green-l:rgba(127,202,148,.16); --amber:#fdd663; --amber-l:rgba(253,214,99,.16);
+  --red:#f2b8b5; --red-l:rgba(242,139,130,.16);
+  --bg:#0c0f14; --surface:#1a1d24; --surface-2:#23272f; --surface-3:#2c313c;
+  --text:#e4e7ee; --text-2:#c0c5cf; --text-3:#8b909b;
+  --outline:#2c313d; --outline-2:#232833;
+  --sh:0 1px 2px rgba(0,0,0,.40), 0 2px 8px rgba(0,0,0,.30);
+  --sh-2:0 4px 14px rgba(0,0,0,.5), 0 12px 32px rgba(0,0,0,.4);
+}
+html[data-theme="dark"] .topbar .logo{color:#202124}
+html[data-theme="dark"] .node .badge{color:#202124}
+html[data-theme="dark"] .node.warnode .ico .msr{color:var(--amber)}
+.iconbtn{cursor:pointer;width:40px;height:40px;border-radius:50%;border:1px solid var(--outline);background:var(--surface);
+  display:grid;place-items:center;color:var(--text-2);font-family:inherit;transition:background .2s}
+.iconbtn:hover{background:var(--surface-3);color:var(--text)}
+.iconbtn:active{transform:scale(.94)}
+.iconbtn .msr{font-size:20px}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{font-family:"Roboto","Roboto Flex",system-ui,Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
+.msr{font-family:"Material Symbols Rounded";font-weight:normal;font-style:normal;line-height:1;
+  font-variation-settings:"FILL"1,"wght"400,"GRAD"0,"opsz"40;-webkit-font-feature-settings:'liga'}
+
+/* App bar */
+.topbar{position:sticky;top:0;z-index:10;background:var(--surface);border-bottom:1px solid var(--outline);
+  display:flex;align-items:center;gap:16px;padding:0 clamp(14px,3vw,28px);height:64px}
+.topbar .logo{width:32px;height:32px;border-radius:8px;display:grid;place-items:center;background:var(--blue);color:#fff}
+.topbar .logo .msr{font-size:20px}
+.topbar .title{font-family:"Roboto Flex";font-size:20px;font-weight:500;color:var(--text);letter-spacing:0}
+.topbar .title b{font-weight:700}
+.topbar .sub{color:var(--text-3);font-size:12px;font-weight:500;margin-left:2px;padding-left:14px;border-left:1px solid var(--outline)}
+.spacer{flex:1}
+.clock{color:var(--text-2);font-weight:500;font-size:13px;font-variant-numeric:tabular-nums}
+.status{display:inline-flex;align-items:center;gap:8px;padding:7px 14px;border-radius:999px;font-weight:500;font-size:13px;
+  background:var(--surface-3);color:var(--text-2);border:1px solid var(--outline)}
+.status .dot{width:8px;height:8px;border-radius:50%;background:var(--text-3)}
+.status.live{background:var(--green-l);color:var(--green);border-color:#ceead6}
+.status.live .dot{background:var(--green);animation:ping 1.8s infinite}
+.status.off{background:var(--red-l);color:var(--red);border-color:#f6cfcb}
+.status.off .dot{background:var(--red)}
+@keyframes ping{0%{box-shadow:0 0 0 0 #1e8e3e66}70%{box-shadow:0 0 0 7px #1e8e3e00}100%{box-shadow:0 0 0 0 #1e8e3e00}}
+
+.wrap{max-width:1480px;margin:0 auto;padding:24px clamp(14px,3vw,28px) 60px}
+.grid{display:grid;gap:16px;grid-template-columns:repeat(12,1fr)}
+.card{background:var(--surface);border:1px solid var(--outline);border-radius:var(--r);padding:22px;box-shadow:var(--sh);position:relative}
+.card h2{margin:0 0 18px;font-size:14px;font-weight:500;color:var(--text);display:flex;align-items:center;gap:10px;font-family:"Roboto Flex"}
+.card h2 .msr{font-size:20px;color:var(--blue)}
+.col-7{grid-column:span 7}.col-5{grid-column:span 5}.col-12{grid-column:span 12}.col-8{grid-column:span 8}.col-4{grid-column:span 4}
+@media(max-width:980px){.col-7,.col-5,.col-8,.col-4{grid-column:span 12}}
+
+/* Now playing */
+.hero{display:flex;gap:20px;align-items:center}
+.art{width:120px;height:120px;border-radius:var(--r-sm);flex:0 0 auto;object-fit:cover;background:var(--surface-3);
+  display:grid;place-items:center;border:1px solid var(--outline-2)}
+.art .msr{font-size:48px;color:var(--text-3)}
+.np-track{font-family:"Roboto Flex";font-size:clamp(20px,2.2vw,26px);font-weight:700;line-height:1.15;margin:0 0 5px;color:var(--text);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:42ch}
+.np-artist{color:var(--text-2);font-weight:400;font-size:15px;margin:0 0 14px}
+.np-meta{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:999px;background:var(--surface-3);
+  border:1px solid var(--outline);font-size:12.5px;font-weight:500;color:var(--text-2)}
+.chip .msr{font-size:15px}
+.chip.accent{background:var(--blue-l);border-color:var(--blue-l2);color:var(--blue-d)}
+.chip.accent .msr{color:var(--blue)}
+.progress{height:6px;border-radius:999px;background:var(--surface-3);overflow:hidden}
+.progress>i{display:block;height:100%;width:0;border-radius:999px;background:var(--blue);transition:width .9s linear}
+.time{display:flex;justify-content:space-between;font-size:12px;color:var(--text-2);margin-top:8px;font-variant-numeric:tabular-nums;font-weight:500}
+
+/* Flow */
+.flow{display:flex;align-items:stretch;overflow-x:auto;padding:6px 2px 14px}
+.node{flex:0 0 auto;width:148px;display:flex;flex-direction:column;align-items:center;text-align:center;gap:10px;position:relative;z-index:2}
+.node .ico{width:72px;height:72px;border-radius:50%;display:grid;place-items:center;background:var(--surface);
+  border:2px solid var(--outline);transition:.35s;position:relative}
+.node .ico .msr{font-size:34px;color:var(--text-3);transition:.35s}
+.node.on .ico{border-color:var(--blue);background:var(--blue-l)}
+.node.on .ico .msr{color:var(--blue)}
+.node.warnode .ico{border-color:var(--amber);background:var(--amber-l)}
+.node.warnode .ico .msr{color:#b06000}
+.node.off .ico{border-color:var(--red);background:var(--red-l)}
+.node.off .ico .msr{color:var(--red)}
+.node .nm{font-weight:500;font-size:14px;color:var(--text)}
+.node .sub{font-size:11.5px;color:var(--text-2);font-weight:400;min-height:14px}
+.node .badge{position:absolute;top:-2px;right:14px;background:var(--blue);color:#fff;border-radius:999px;
+  font-size:9.5px;font-weight:700;letter-spacing:.4px;padding:2px 7px}
+.pipe{flex:1 1 auto;min-width:42px;align-self:flex-start;height:6px;border-radius:999px;margin-top:33px;position:relative;
+  background:var(--outline);overflow:hidden;z-index:1}
+.pipe.flow::after{content:"";position:absolute;inset:0;border-radius:999px;
+  background:linear-gradient(90deg,#0000,var(--blue),#0000);background-size:55% 100%;background-repeat:no-repeat;
+  background-position:calc(var(--flowx,0) * 1%) 0}
+.pipe.flow{background:var(--blue-l2)}
+.pipe.ready::after{content:"";position:absolute;inset:0;border-radius:999px;opacity:.55;
+  background:linear-gradient(90deg,#0000,#9aa0a6,#0000);background-size:40% 100%;background-repeat:no-repeat;animation:slide 4.5s linear infinite}
+.pipe.down{background:var(--red-l)}
+@keyframes slide{0%{background-position:-60% 0}100%{background-position:160% 0}}
+
+.outs{display:flex;flex-direction:column;gap:8px;width:100%;margin-top:4px}
+.node.dest{width:auto;min-width:196px;max-width:250px}
+.node.dest .outchip{min-width:0;width:100%}
+.node.dest.on .ico{border-color:var(--blue);background:var(--blue-l)}
+.node.dest.on .ico .msr{color:var(--blue)}
+.outchip{display:flex;align-items:center;gap:11px;padding:10px 14px;border-radius:var(--r-sm);background:var(--surface);
+  border:1px solid var(--outline);min-width:152px}
+.outchip.on{border-color:var(--blue-l2);background:var(--blue-l)}
+.outchip .msr{font-size:22px;color:var(--text-3)}
+.outchip.on .msr{color:var(--blue)}
+.outchip .l{font-weight:500;font-size:13.5px;color:var(--text)}
+.outchip .s{font-size:11px;color:var(--text-2);font-weight:400}
+
+.urlbar{display:flex;align-items:center;gap:10px;margin-top:16px;padding:10px 14px;border-radius:var(--r-sm);
+  background:var(--surface-2);border:1px solid var(--outline)}
+.urlbar code{font-family:"Roboto Mono","Roboto",monospace;font-weight:500;color:var(--text);font-size:13px;flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.btn{cursor:pointer;border:1px solid var(--outline);border-radius:999px;padding:8px 16px;font-weight:500;font-size:13px;
+  background:var(--surface);color:var(--blue);display:inline-flex;align-items:center;gap:6px;font-family:inherit}
+.btn:hover{background:var(--blue-l);border-color:var(--blue-l2)}
+.btn:active{transform:scale(.97)}
+
+/* lists / health */
+.list{display:flex;flex-direction:column;gap:8px}
+.lrow{display:flex;align-items:center;gap:13px;padding:12px 14px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--outline-2)}
+.lrow .av{width:40px;height:40px;border-radius:10px;display:grid;place-items:center;background:var(--blue-l);flex:0 0 auto}
+.lrow .av .msr{font-size:21px;color:var(--blue)}
+.lrow .nm{font-weight:500;font-size:14px;color:var(--text)}
+.lrow .ip{font-size:12px;color:var(--text-2);font-weight:400;font-variant-numeric:tabular-nums}
+.lrow .dur{margin-left:auto;font-size:12px;color:var(--text-2);font-weight:500}
+.empty{color:var(--text-3);font-weight:400;font-size:14px;padding:20px 4px;text-align:center}
+.health{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.hitem{display:flex;align-items:center;gap:11px;padding:12px 14px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--outline-2)}
+.hitem .st{width:10px;height:10px;border-radius:50%;background:var(--red);flex:0 0 auto}
+.hitem.ok .st{background:var(--green)}
+.hitem.warnst .st{background:var(--amber)}
+.hitem .nm{font-weight:500;font-size:13.5px;color:var(--text)}
+.hitem .sub{font-size:11px;color:var(--text-2);font-weight:400}
+.fadein{animation:fadein .4s both}@keyframes fadein{from{opacity:0;transform:translateY(6px)}to{opacity:1}}
+.chip.count{background:var(--blue-l);border-color:var(--blue-l2);color:var(--blue-d);font-weight:700}
+/* KPI strip */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:16px}
+@media(max-width:980px){.kpis{grid-template-columns:repeat(2,1fr)}}
+.kpi{background:var(--surface);border:1px solid var(--outline);border-radius:var(--r);padding:16px 18px;box-shadow:var(--sh);display:flex;align-items:center;gap:14px;transition:box-shadow .2s,transform .2s}
+.kpi:hover{box-shadow:var(--sh-2)}
+.kpi .k-ico{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;background:var(--blue-l);color:var(--blue);flex:0 0 auto;transition:.3s}
+.kpi .k-ico .msr{font-size:24px}
+.kpi .k-v{font-family:"Roboto Flex";font-size:21px;font-weight:700;color:var(--text);line-height:1.1;letter-spacing:-.2px}
+.kpi .k-l{font-size:12px;color:var(--text-2);font-weight:500;margin-top:3px}
+.kpi.live .k-ico{background:var(--green-l);color:var(--green)}
+/* card hover + footer */
+.card{transition:box-shadow .2s}
+.card:hover{box-shadow:var(--sh-2)}
+.foot{margin-top:24px;padding:16px 6px;display:flex;align-items:center;gap:10px;color:var(--text-3);font-size:12px;font-weight:500;border-top:1px solid var(--outline)}
+.foot .fdot{width:7px;height:7px;border-radius:50%;background:var(--green);box-shadow:0 0 0 0 #1e8e3e66;animation:ping 1.8s infinite}
+.empty .msr{display:block;font-size:34px;color:var(--outline);margin:0 auto 8px}
+
+/* ---- auth banner ---- */
+.banner{display:none;align-items:center;gap:16px;background:var(--surface);border:1px solid var(--outline);
+  border-left:4px solid var(--amber);border-radius:var(--r);padding:16px 20px;margin-bottom:16px;box-shadow:var(--sh)}
+.banner.show{display:flex}
+.banner .b-ico{width:44px;height:44px;border-radius:10px;display:grid;place-items:center;background:var(--amber-l);color:#b06000;flex:0 0 auto}
+.banner .b-ico .msr{font-size:24px}
+.banner .b-t{font-weight:600;font-size:15px;color:var(--text)}
+.banner .b-s{font-size:12.5px;color:var(--text-2);margin-top:2px;max-width:70ch}
+.banner .b-s a{color:var(--blue-d)}
+.btn.primary{background:var(--blue);color:#fff;border-color:var(--blue)}
+.btn.primary:hover{background:var(--blue-d);border-color:var(--blue-d)}
+.btn.big{padding:11px 20px;font-size:14px}
+.btn[disabled]{opacity:.5;cursor:not-allowed}
+
+/* ---- control + schedule ---- */
+.ctl{display:flex;flex-wrap:wrap;gap:12px;align-items:end}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:11.5px;font-weight:600;color:var(--text-2);letter-spacing:.2px}
+select,input[type=time],input[type=text]{font-family:inherit;font-size:14px;color:var(--text);background:var(--surface);
+  border:1px solid var(--outline);border-radius:var(--r-xs);padding:10px 12px;outline:none;transition:border .2s;min-height:42px}
+select:focus,input:focus{border-color:var(--blue)}
+select{min-width:230px;cursor:pointer}
+.days{display:flex;gap:5px}
+.day{width:34px;height:34px;border-radius:50%;border:1px solid var(--outline);background:var(--surface);color:var(--text-2);
+  font-size:12px;font-weight:600;cursor:pointer;display:grid;place-items:center;font-family:inherit;transition:.15s}
+.day.on{background:var(--blue);color:#fff;border-color:var(--blue)}
+.switch{display:inline-flex;align-items:center;gap:8px;cursor:pointer;font-size:13px;font-weight:500;color:var(--text-2);user-select:none}
+.switch input{display:none}
+.switch .track{width:38px;height:22px;border-radius:999px;background:var(--outline);position:relative;transition:.2s;flex:0 0 auto}
+.switch .track::after{content:"";position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;transition:.2s;box-shadow:0 1px 2px rgba(0,0,0,.3)}
+.switch input:checked+.track{background:var(--blue)}
+.switch input:checked+.track::after{transform:translateX(16px)}
+.divider{height:1px;background:var(--outline);margin:20px 0}
+.sublabel{font-size:12px;font-weight:600;color:var(--text-3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.srow{display:flex;align-items:center;gap:14px;padding:12px 14px;border-radius:var(--r-sm);background:var(--surface-2);border:1px solid var(--outline-2);margin-bottom:8px}
+.srow .st{width:10px;height:10px;border-radius:50%;background:var(--green);flex:0 0 auto}
+.srow .st.off{background:var(--text-3)}
+.srow .s-time{font-family:"Roboto Flex";font-weight:700;font-size:17px;color:var(--text);font-variant-numeric:tabular-nums;min-width:64px}
+.srow .s-nm{font-weight:500;font-size:14px;color:var(--text)}
+.srow .s-sub{font-size:11.5px;color:var(--text-2);margin-top:1px}
+.srow .s-act{margin-left:auto;display:flex;gap:6px}
+.minibtn{width:34px;height:34px;border-radius:8px;border:1px solid var(--outline);background:var(--surface);color:var(--text-2);
+  display:grid;place-items:center;cursor:pointer;transition:.15s}
+.minibtn:hover{background:var(--surface-3);color:var(--text)}
+.minibtn.danger:hover{background:var(--red-l);color:var(--red);border-color:#f6cfcb}
+.minibtn .msr{font-size:18px}
+.slog{margin-top:14px;font-size:12px;color:var(--text-2);display:flex;flex-direction:column;gap:4px;font-variant-numeric:tabular-nums}
+.slog .lg{padding:4px 0;border-top:1px dashed var(--outline-2)}
+.transport{display:flex;align-items:center;gap:10px;margin-top:20px;padding-top:18px;border-top:1px solid var(--outline);flex-wrap:wrap}
+.tbtn{width:44px;height:44px;border-radius:50%;border:1px solid var(--outline);background:var(--surface);color:var(--text);display:grid;place-items:center;cursor:pointer;transition:.15s;flex:0 0 auto}
+.tbtn:hover{background:var(--surface-3)}
+.tbtn:active{transform:scale(.94)}
+.tbtn .msr{font-size:22px}
+.tbtn.main{width:54px;height:54px;background:var(--blue);border-color:var(--blue);color:#fff}
+.tbtn.main:hover{background:var(--blue-d)}
+.tbtn.main .msr{font-size:28px}
+.transport .sep{flex:0 0 8px}
+.transport select{min-width:150px;flex:1;max-width:340px}
+.toast{position:fixed;left:50%;bottom:28px;transform:translateX(-50%) translateY(20px);background:var(--text);color:var(--surface);
+  padding:12px 20px;border-radius:10px;font-size:13.5px;font-weight:500;box-shadow:var(--sh-2);opacity:0;transition:.25s;z-index:50;pointer-events:none;max-width:80vw}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.pl-thumb{width:22px;height:22px;border-radius:4px;object-fit:cover;vertical-align:middle;margin-right:8px}
+
+/* ============================================================
+   Material 3 polish pass
+   ============================================================ */
+:root{
+  --ease:cubic-bezier(.2,0,0,1);
+  --ease-emph:cubic-bezier(.05,.7,.1,1);
+  --sh-3:0 4px 8px 3px rgba(60,64,67,.10),0 1px 3px rgba(60,64,67,.14);
+  --scroll:rgba(95,99,104,.35);
+}
+html[data-theme="dark"]{ --scroll:rgba(154,160,166,.32); --sh-3:0 6px 14px 3px rgba(0,0,0,.5),0 2px 4px rgba(0,0,0,.3); }
+
+/* 01 · smoother global rendering + page fade-in */
+html{scroll-behavior:smooth}
+body{-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;animation:pagein .5s var(--ease-emph)}
+@keyframes pagein{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:none}}
+/* 02 · branded text selection */
+::selection{background:var(--blue-l2);color:var(--text)}
+/* 03 · themed slim scrollbars */
+*{scrollbar-width:thin;scrollbar-color:var(--scroll) transparent}
+::-webkit-scrollbar{width:12px;height:12px}
+::-webkit-scrollbar-thumb{background:var(--scroll);border-radius:12px;border:3px solid transparent;background-clip:content-box}
+::-webkit-scrollbar-thumb:hover{background:var(--text-3);background-clip:content-box}
+/* 04 · accessible keyboard focus rings */
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+button:focus:not(:focus-visible){outline:none}
+.switch:focus-within .track{box-shadow:0 0 0 4px var(--blue-l)}
+/* 05 · respect reduced-motion */
+@media (prefers-reduced-motion: reduce){*,*::before,*::after{animation-duration:.001ms!important;transition-duration:.001ms!important;animation-iteration-count:1!important;scroll-behavior:auto!important}}
+/* 06 · button interaction base (ripple removed — it read as the button "growing" on click;
+   no overflow:hidden so custom tooltips are no longer clipped) */
+.btn,.tbtn,.iconbtn,.minibtn,.day{position:relative}
+.btn>*,.tbtn>*,.iconbtn>*,.minibtn>*{position:relative;z-index:1}
+
+/* 07 · app bar elevates on scroll */
+.topbar{transition:box-shadow .25s var(--ease)}
+.topbar.scrolled{box-shadow:0 1px 3px rgba(60,64,67,.12),0 4px 10px 3px rgba(60,64,67,.06)}
+/* 08 · product-style gradient logo + tighter title */
+.topbar .logo{background:linear-gradient(135deg,#4285f4,#1a73e8 55%,#1967d2);box-shadow:0 1px 3px rgba(26,115,232,.5)}
+.topbar .title{letter-spacing:-.25px}
+/* 09 · account avatar with live status dot */
+.avatar{width:34px;height:34px;border-radius:50%;display:grid;place-items:center;cursor:pointer;color:#fff;position:relative;flex:0 0 auto;border:none;
+  background:linear-gradient(135deg,#1a73e8,#7c4dff);box-shadow:var(--sh);transition:transform .2s var(--ease-emph),box-shadow .2s}
+.avatar:hover{transform:scale(1.06);box-shadow:var(--sh-2)}
+.avatar:active{transform:scale(.96)}
+.avatar .msr{font-size:20px}
+.avatar .ava-init{font:700 15px "Roboto Flex",system-ui,sans-serif;line-height:1}
+.avatar .dotstat{position:absolute;right:-1px;bottom:-1px;width:11px;height:11px;border-radius:50%;background:var(--text-3);border:2px solid var(--surface);transition:background .3s}
+.avatar.linked .dotstat{background:var(--green)}
+
+/* 10 · Material button radius, elevation & tonal variant */
+.btn{border-radius:20px;transition:background .2s var(--ease),box-shadow .2s var(--ease),border-color .2s,color .2s}
+.btn.primary{box-shadow:0 1px 2px rgba(60,64,67,.25)}
+.btn.primary:hover{box-shadow:var(--sh-2);background:var(--blue-d)}
+.btn.primary:active{box-shadow:var(--sh);transform:scale(.98)}
+.btn.tonal{background:var(--blue-l);color:var(--blue-d);border-color:transparent}
+.btn.tonal:hover{background:var(--blue-l2)}
+.btn:active{transform:scale(.98)}
+.btn[disabled]{opacity:.5;box-shadow:none}
+/* 11 · transport & icon-button motion + FAB elevation */
+.iconbtn,.tbtn{transition:background .2s var(--ease),transform .15s var(--ease),box-shadow .2s,color .2s}
+.tbtn.main{box-shadow:0 1px 3px rgba(26,115,232,.45)}
+.tbtn.main:hover{box-shadow:var(--sh-2);transform:translateY(-1px)}
+.tbtn:hover{background:var(--surface-3)}
+
+/* 12 · roomier cards that lift on hover */
+.card{padding:24px;transition:box-shadow .25s var(--ease),transform .25s var(--ease-emph),border-color .25s}
+.card:hover{box-shadow:var(--sh-2);transform:translateY(-1px)}
+/* 13 · console-style tonal icon chip in card headers */
+.card h2{gap:12px;font-size:15px;letter-spacing:-.1px;margin-bottom:20px}
+.card h2 .msr{width:30px;height:30px;border-radius:9px;background:var(--blue-l);color:var(--blue);display:grid;place-items:center;font-size:19px}
+
+/* 14 · KPI hover lift + playful icon */
+.kpi{transition:box-shadow .25s var(--ease),transform .25s var(--ease-emph)}
+.kpi:hover{transform:translateY(-2px)}
+.kpi .k-ico{transition:transform .3s var(--ease-emph),background .3s,color .3s}
+.kpi:hover .k-ico{transform:scale(1.08) rotate(-4deg)}
+.kpi .k-v{font-variant-numeric:tabular-nums}
+
+/* 15 · custom select chevron + field states */
+select{appearance:none;-webkit-appearance:none;padding-right:38px;
+  background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%235f6368"><path d="M7 10l5 5 5-5z"/></svg>');
+  background-repeat:no-repeat;background-position:right 9px center;transition:border-color .2s,box-shadow .2s,background-color .2s}
+html[data-theme="dark"] select{background-image:url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="%239aa0a6"><path d="M7 10l5 5 5-5z"/></svg>')}
+select:hover,input[type=time]:hover,input[type=text]:hover{border-color:var(--text-3)}
+select:focus,input:focus{border-color:var(--blue);box-shadow:inset 0 0 0 1px var(--blue)}
+/* 16 · refined Material switch */
+.switch .track{width:44px;height:26px;border:2px solid var(--outline);background:transparent;transition:background .2s var(--ease),border-color .2s}
+.switch .track::after{width:12px;height:12px;top:5px;left:5px;background:var(--text-3);transition:all .22s var(--ease-emph)}
+.switch input:checked+.track{background:var(--blue);border-color:var(--blue)}
+.switch input:checked+.track::after{width:18px;height:18px;top:2px;left:20px;background:#fff;transform:none}
+/* 17 · day filter-chips */
+.day{transition:background .18s var(--ease),color .18s,border-color .18s,transform .1s}
+.day:hover{background:var(--blue-l);border-color:var(--blue-l2);color:var(--blue-d)}
+.day.on:hover{background:var(--blue-d)}
+.day:active{transform:scale(.9)}
+
+/* 18 · now-playing artwork & title fade */
+.art{border-radius:14px;box-shadow:var(--sh);transition:transform .3s var(--ease-emph),box-shadow .3s}
+.card:hover .art{transform:scale(1.02);box-shadow:var(--sh-2)}
+#artph{background:linear-gradient(135deg,var(--surface-3),var(--surface-2))}
+.np-track{text-overflow:clip;-webkit-mask-image:linear-gradient(90deg,#000 86%,transparent);mask-image:linear-gradient(90deg,#000 86%,transparent)}
+/* 19 · progress thickens on hover + gradient fill */
+.progress{transition:height .2s var(--ease)}
+.card:hover .progress{height:8px}
+.progress>i{background:linear-gradient(90deg,var(--blue),var(--blue-d))}
+
+/* 21 · chips squared like Material assist chips */
+.chip{border-radius:8px;transition:background .2s,border-color .2s,color .2s}
+.chip.count{border-radius:999px}
+/* 22 · list/row hover states */
+.lrow,.hitem,.srow,.outchip{transition:background .2s var(--ease),border-color .2s,box-shadow .2s,transform .15s}
+.lrow:hover,.srow:hover{background:var(--surface-3)}
+.outchip:hover{border-color:var(--blue-l2)}
+/* 23 · friendlier empty states */
+.empty{padding:30px 4px}
+.empty .msr{font-size:36px;width:66px;height:66px;border-radius:50%;background:var(--surface-2);display:grid;place-items:center;color:var(--text-3);border:1px solid var(--outline-2)}
+/* 24 · minibtn hover polish */
+.minibtn{transition:background .18s var(--ease),color .18s,border-color .18s,transform .1s}
+.minibtn:active{transform:scale(.9)}
+
+/* 25 · custom Material tooltips (from title) */
+[data-tip]{position:relative}
+[data-tip]::after{content:attr(data-tip);position:absolute;top:calc(100% + 8px);left:50%;transform:translateX(-50%) translateY(-4px) scale(.96);transform-origin:top center;
+  background:var(--text);color:var(--surface);font-size:11px;font-weight:500;letter-spacing:.2px;padding:5px 9px;border-radius:6px;white-space:nowrap;
+  opacity:0;pointer-events:none;transition:opacity .14s var(--ease),transform .14s var(--ease);z-index:80;box-shadow:var(--sh-2)}
+[data-tip]:hover::after,[data-tip]:focus-visible::after{opacity:1;transform:translateX(-50%) translateY(0) scale(1)}
+/* 26 · Material snackbar (bottom-left, action-ready) */
+.toast{left:24px;transform:translateY(28px);border-radius:8px;padding:14px 18px;background:var(--text);color:var(--surface);
+  box-shadow:var(--sh-3);max-width:min(92vw,440px);display:flex;align-items:center;gap:10px}
+.toast.show{transform:translateY(0)}
+/* 27 · skeleton shimmer while first data loads */
+.booting .k-v,.booting #track,.booting #artist{color:transparent!important;border-radius:6px;
+  background:linear-gradient(90deg,var(--surface-3) 25%,var(--surface-2) 37%,var(--surface-3) 63%);background-size:200% 100%;animation:shimmer 1.3s infinite linear}
+.booting #artist{max-width:55%}
+@keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
+/* 28 · live status pill micro-interaction */
+.status{transition:background .3s,color .3s,border-color .3s}
+.chip.count{transition:background .3s}
+/* 29 · sub-label + divider refinement */
+.sublabel{color:var(--text-2)}
+.divider{background:linear-gradient(90deg,var(--outline),transparent)}
+/* 30 · node icon fill morph on activation */
+.node .ico{transition:.35s var(--ease-emph)}
+.node.on .ico{box-shadow:0 0 0 4px var(--blue-l)}
+.node .ico .msr{transition:color .35s,font-variation-settings .35s}
+
+/* 31 · seekable progress bar (click + drag to scrub) */
+#pwrap{position:relative;cursor:pointer;touch-action:none;overflow:visible}
+#pwrap::before{content:"";position:absolute;left:0;right:0;top:-10px;bottom:-10px} /* fat pointer hit-target */
+#pbar{position:relative;z-index:1;transition:width .45s linear}
+#phandle{position:absolute;top:50%;left:0;width:14px;height:14px;border-radius:50%;background:var(--blue);
+  box-shadow:var(--sh);transform:translate(-50%,-50%);z-index:2;opacity:0;pointer-events:none;
+  transition:opacity .15s var(--ease),left .45s linear}
+.card:hover #phandle,#pwrap:hover #phandle,#pwrap:focus-visible #phandle,#pwrap.dragging #phandle{opacity:1}
+#pwrap:focus-visible{outline:2px solid var(--blue);outline-offset:4px}
+#pwrap.dragging{cursor:grabbing}
+#pwrap.dragging>i,#pwrap.dragging #phandle{transition:none} /* instant feedback while scrubbing */
+
+/* 32 · Up Next / queue panel (keyed-diff rendered — no innerHTML thrash) */
+.upnext{margin-top:20px;padding-top:18px;border-top:1px solid var(--outline)}
+.upnext[hidden]{display:none}
+.un-head{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;color:var(--text-2);
+  text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+.un-head .msr{font-size:16px;color:var(--blue)}
+.un-count{margin-left:auto;font-weight:600;letter-spacing:0;text-transform:none;color:var(--text-3);font-size:11.5px}
+.un-list{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:6px;max-height:288px;overflow-y:auto}
+.un-item{display:flex;align-items:center;gap:12px;padding:8px 10px;border-radius:var(--r-sm);
+  background:var(--surface-2);border:1px solid var(--outline-2);transition:background .2s var(--ease),border-color .2s}
+.un-item:hover{background:var(--surface-3)}
+.un-idx{width:18px;text-align:center;font-size:12px;font-weight:600;color:var(--text-3);font-variant-numeric:tabular-nums;flex:0 0 auto}
+.un-art{width:40px;height:40px;border-radius:8px;background:var(--surface-3);flex:0 0 auto;overflow:hidden;
+  display:grid;place-items:center;border:1px solid var(--outline-2)}
+.un-art img{width:100%;height:100%;object-fit:cover;display:block}
+.un-art .msr{font-size:20px;color:var(--text-3)}
+.un-meta{min-width:0;flex:1}
+.un-title{font-weight:500;font-size:13.5px;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.un-artist{font-size:11.5px;color:var(--text-2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.un-dur{margin-left:auto;font-size:11.5px;color:var(--text-3);font-weight:500;font-variant-numeric:tabular-nums;flex:0 0 auto}
+.un-item.enter{animation:unin .3s var(--ease-emph)}   /* transform-only: rows never depend on the animation to be visible */
+@keyframes unin{from{transform:translateY(8px)}to{transform:none}}
+
+/* 33 · weekly playback timeline — drag-to-paint calendar (polished) */
+.sched{margin-top:4px}
+.sched-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:8px}
+.sched-top .sublabel{margin-bottom:0}
+.sched-actions{margin-left:auto;display:flex;align-items:center;gap:12px}
+.sched-now{display:inline-flex;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--text-2);
+  padding:6px 13px;border-radius:999px;background:var(--surface-2);border:1px solid var(--outline-2);white-space:nowrap}
+.sched-now .dot{width:8px;height:8px;border-radius:50%;background:var(--text-3);flex:0 0 auto}
+.sched-now.live{color:var(--green);border-color:var(--green-l);background:var(--green-l)}
+.sched-now.live .dot{background:var(--green);box-shadow:0 0 0 3px rgba(30,142,62,.25)}
+.sched-now.off .dot{background:var(--text-3)}
+.sched-hint{font-size:12.5px;color:var(--text-3);margin:2px 0 14px;line-height:1.5;max-width:82ch}
+.sched-hint b{color:var(--text-2);font-weight:600}
+.sched.disabled .cal,.sched.disabled .palette,.sched.disabled .sched-hint{opacity:.55;filter:saturate(.55);pointer-events:none}
+
+/* brush / palette bar — "paint with this playlist" */
+.palette{display:flex;flex-wrap:wrap;align-items:center;gap:8px;padding:11px 14px;margin-bottom:14px;
+  background:var(--surface-2);border:1px solid var(--outline-2);border-radius:var(--r-sm)}
+.palette .p-lead{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:600;color:var(--text-2);margin-right:4px;white-space:nowrap}
+.palette .p-lead .msr{font-size:18px;color:var(--text-3)}
+.pchip{display:inline-flex;align-items:center;gap:8px;padding:7px 14px 7px 11px;border-radius:999px;cursor:pointer;
+  background:var(--surface);border:1.5px solid var(--outline);font-size:13px;font-weight:600;color:var(--text-2);
+  max-width:240px;transition:background .15s,border-color .15s,color .15s,box-shadow .15s,transform .1s}
+.pchip:hover{background:var(--surface-3)}
+.pchip:active{transform:scale(.96)}
+.pchip .sw{width:13px;height:13px;border-radius:5px;flex:0 0 auto;box-shadow:0 0 0 1px rgba(0,0,0,.08) inset}
+.pchip .chk{font-size:17px;flex:0 0 auto}
+.pchip .nm{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.pchip.on{color:#fff;border-color:transparent;box-shadow:0 2px 7px rgba(60,64,67,.28)}
+.pchip.on .nm,.pchip.on .chk{color:#fff}
+.palette .p-empty{font-size:13px;color:var(--text-3)}
+
+/* calendar shell */
+.cal{position:relative;border:1px solid var(--outline);border-radius:var(--r-sm);overflow:hidden;background:var(--surface);
+  user-select:none;-webkit-user-select:none;box-shadow:var(--sh)}
+.cal-head{display:flex;border-bottom:1px solid var(--outline);background:var(--surface-2)}
+.cal-corner{flex:0 0 48px;width:48px}
+.cal-days{flex:1;display:flex}
+.cal-dayhdr{flex:1 1 0;min-width:0;text-align:center;padding:11px 2px;font-size:12.5px;font-weight:600;color:var(--text-2);
+  border-left:1px solid var(--outline-2);letter-spacing:.3px}
+.cal-dayhdr.today{color:#fff;background:var(--blue)}
+.cal-scroll{max-height:500px;overflow-y:auto;overflow-x:hidden;overscroll-behavior:contain}
+.cal-body{display:flex;position:relative}
+.cal-axis{flex:0 0 48px;width:48px;position:relative}
+.cal-hour{position:absolute;right:7px;font-size:10.5px;font-weight:600;color:var(--text-3);transform:translateY(-6px);
+  font-variant-numeric:tabular-nums;white-space:nowrap;letter-spacing:.2px}
+.cal-cols{flex:1;display:flex}
+/* HOUR_H below MUST match the JS constant (48px). Gridlines: solid hour, faint half-hour. */
+.cal-col{flex:1 1 0;min-width:0;position:relative;border-left:1px solid var(--outline-2);touch-action:none;
+  background-image:repeating-linear-gradient(to bottom,var(--outline-2) 0,var(--outline-2) 1px,transparent 1px,transparent 48px),
+    repeating-linear-gradient(to bottom,transparent 0,transparent 24px,var(--outline-2) 24px,var(--outline-2) 25px,transparent 25px,transparent 48px)}
+.sched:not(.disabled) .cal-col{cursor:crosshair}
+.cal-col.today{background-color:var(--blue-l)}
+
+/* time blocks */
+.cal-block{position:absolute;left:3px;right:3px;border-radius:8px;overflow:hidden;cursor:grab;color:#fff;
+  box-shadow:0 1px 3px rgba(0,0,0,.28);display:flex;flex-direction:column;gap:1px;
+  padding:4px 8px;font-size:11px;line-height:1.25;min-height:15px;transition:box-shadow .14s,filter .14s}
+.cal-block::before{content:"";position:absolute;inset:0;border-radius:inherit;pointer-events:none;
+  background:linear-gradient(180deg,rgba(255,255,255,.18),rgba(255,255,255,0) 45%,rgba(0,0,0,.16))}
+.cal-block>*{position:relative;z-index:1}
+.cal-block:hover{box-shadow:0 4px 12px rgba(0,0,0,.34);filter:brightness(1.07)}
+.cal-block:active{cursor:grabbing}
+.cal-block.sel{box-shadow:0 0 0 2px var(--surface),0 0 0 4px var(--blue),0 5px 14px rgba(0,0,0,.36);z-index:5}
+.cal-block .blk-name{font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 2px rgba(0,0,0,.30)}
+.cal-block .blk-time{font-size:10px;font-weight:600;opacity:.94;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-shadow:0 1px 1px rgba(0,0,0,.24)}
+.cal-block .blk-x{position:absolute;top:3px;right:4px;font-size:12px;opacity:.92;z-index:2}
+.cal-block.sh .blk-name,.cal-block.sh .blk-time{padding-right:15px}
+.cal-block .blk-h{position:absolute;left:0;right:0;height:9px;cursor:ns-resize;z-index:2}
+.cal-block .blk-h.top{top:-1px}
+.cal-block .blk-h.bot{bottom:-1px}
+.cal-block.ghost{opacity:.82;pointer-events:none;outline:2px dashed rgba(255,255,255,.85);outline-offset:-3px}
+.cal-now{position:absolute;left:0;right:0;height:2px;background:#ea4335;z-index:6;pointer-events:none}
+.cal-now::before{content:"";position:absolute;left:-4px;top:-4px;width:10px;height:10px;border-radius:50%;background:#ea4335;box-shadow:0 0 0 2px var(--surface)}
+
+/* empty-state hint drawn over the (still drag-able) grid */
+.cal-empty{position:absolute;left:48px;right:0;top:43px;bottom:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+  gap:9px;text-align:center;color:var(--text-3);pointer-events:none;padding:24px;z-index:3}
+.cal.is-empty .cal-empty{display:flex}
+.cal-empty .msr{font-size:40px;color:var(--outline)}
+.cal-empty b{color:var(--text-2);font-weight:600;font-size:14.5px}
+.cal-empty span{font-size:12.5px;max-width:36ch;line-height:1.5}
+
+.blk-pop{position:fixed;z-index:60;width:250px;background:var(--surface);border:1px solid var(--outline);border-radius:var(--r-sm);
+  box-shadow:var(--sh-2);padding:14px;display:flex;flex-direction:column;gap:10px;font-size:13px}
+.blk-pop .pop-when{font-weight:700;color:var(--text);font-size:13px;display:flex;align-items:center;gap:7px}
+.blk-pop .pop-when .sw{width:12px;height:12px;border-radius:4px;flex:0 0 auto}
+.blk-pop label{font-size:11.5px;font-weight:600;color:var(--text-2)}
+.blk-pop select{width:100%;min-width:0}
+
+/* audio processing (loudness leveling) control in the Live Output Level card */
+.sndctl{margin-top:16px;padding-top:16px;border-top:1px solid var(--outline);display:flex;flex-direction:column;gap:12px}
+.snd-top{display:flex;align-items:center;gap:12px}
+.snd-badge{margin-left:auto;display:inline-flex;align-items:center;gap:4px;font-size:11.5px;font-weight:600;color:var(--green);
+  background:var(--green-l);padding:4px 10px 4px 8px;border-radius:999px;white-space:nowrap}
+.snd-adj{display:flex;align-items:center;gap:12px;font-size:12.5px;color:var(--text-2);font-weight:500}
+.snd-adj label{flex:0 0 auto}
+.snd-adj input[type=range]{flex:1;min-width:80px;accent-color:var(--blue);cursor:pointer;height:4px}
+.snd-val{flex:0 0 auto;font-variant-numeric:tabular-nums;font-weight:600;color:var(--text);min-width:46px;text-align:right}
+.sndctl.off .snd-adj{opacity:.4;pointer-events:none}
+.snd-note{font-size:11.5px;color:var(--text-3);line-height:1.45}
+.blk-pop .pop-foot{display:flex;align-items:center;gap:8px;margin-top:2px}
+.blk-pop .pop-foot .grow{flex:1}
+.minibtn{cursor:pointer;border:1px solid var(--outline);background:var(--surface);border-radius:999px;width:34px;height:34px;
+  display:grid;place-items:center;color:var(--text-2);transition:background .15s,color .15s,border-color .15s}
+.minibtn:hover{background:var(--surface-2);color:var(--text)}
+.minibtn.danger:hover{background:var(--red,#ea4335);border-color:var(--red,#ea4335);color:#fff}
+@media(max-width:640px){
+  .cal-dayhdr{font-size:11px}
+  .cal-dayhdr small{display:none}
+  .cal-scroll{max-height:380px}
+}
+
+/* ============================================================
+   Material 3 Expressive pass — tonal surfaces, color variety,
+   springier motion, responsive fixes. Layered on top of the
+   base styles; restyles only, never restructures, so every
+   element id/class the JS relies on is left intact.
+   ============================================================ */
+:root{
+  --teal:#00897b;   --teal-c:#d4efec;
+  --purple:#7c3aed; --purple-c:#ece3fe;
+  --pink:#c9377d;   --pink-c:#fbe1ee;
+  --r-lg:24px; --r-xl:28px;
+  --spring:cubic-bezier(.2,.8,.2,1.1);
+  --e1:0 1px 2px rgba(28,42,74,.05), 0 2px 8px rgba(28,42,74,.05);
+  --e2:0 2px 10px rgba(28,42,74,.09), 0 14px 32px rgba(28,42,74,.10);
+}
+html[data-theme="dark"]{
+  --teal:#5ad2c4;   --teal-c:rgba(90,210,196,.16);
+  --purple:#c4b3fb; --purple-c:rgba(150,120,250,.18);
+  --pink:#f19bc6;   --pink-c:rgba(240,120,180,.16);
+  --e1:0 1px 2px rgba(0,0,0,.40), 0 2px 8px rgba(0,0,0,.30);
+  --e2:0 4px 14px rgba(0,0,0,.50), 0 16px 36px rgba(0,0,0,.42);
+}
+
+/* --- page: cool, softly-lit canvas (fixed so it doesn't scroll) --- */
+body{background:radial-gradient(1200px 560px at 50% -10%, rgba(26,115,232,.06), transparent 68%), var(--bg); background-attachment:fixed}
+html[data-theme="dark"] body{background:radial-gradient(1200px 560px at 50% -12%, rgba(138,180,248,.10), transparent 66%), var(--bg); background-attachment:fixed}
+
+/* --- app bar: translucent tonal surface --- */
+.topbar{height:64px; background:color-mix(in srgb, var(--surface) 86%, transparent);
+  -webkit-backdrop-filter:saturate(1.6) blur(14px); backdrop-filter:saturate(1.6) blur(14px)}
+.topbar .title{white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0}
+.topbar .logo{width:36px; height:36px; border-radius:11px}
+.topbar .logo .msr{font-size:22px}
+.topbar .sub{white-space:nowrap}
+
+/* --- cards & KPIs: rounded, tonal, calm elevation (no hover jump) --- */
+.card{border-radius:var(--r-lg); box-shadow:var(--e1); border-color:var(--outline)}
+.card:hover{box-shadow:var(--e2); transform:none; border-color:var(--outline)}
+.kpi{border-radius:var(--r-lg); box-shadow:var(--e1); border-color:var(--outline)}
+.kpi:hover{box-shadow:var(--e2); transform:none}
+.kpi:hover .k-ico{transform:scale(1.06) rotate(0)}
+.kpi .k-ico{border-radius:12px}
+
+/* --- card-header icon chips: distinct tonal color per section --- */
+.card h2 .msr{border-radius:11px}
+.card h2.hd-teal .msr{background:var(--teal-c); color:var(--teal)}
+.card h2.hd-purple .msr{background:var(--purple-c); color:var(--purple)}
+.card h2.hd-green .msr{background:var(--green-l); color:var(--green)}
+.card h2.hd-pink .msr{background:var(--pink-c); color:var(--pink)}
+/* --- KPI icon chips: matching tonal variety --- */
+.kpi.k-teal .k-ico{background:var(--teal-c); color:var(--teal)}
+.kpi.k-purple .k-ico{background:var(--purple-c); color:var(--purple)}
+.kpi.k-amber .k-ico{background:var(--amber-l); color:#b06000}
+html[data-theme="dark"] .kpi.k-amber .k-ico{color:var(--amber)}
+
+/* --- Now Playing hero: top-align art, no more vertical drift --- */
+.hero{align-items:flex-start}
+.art{width:132px; height:132px}
+.np-track{margin-top:1px}
+
+/* --- Up Next: fade the scroll edge so a partial row reads as intentional --- */
+.un-list{max-height:300px; -webkit-mask-image:linear-gradient(180deg,#000 90%,transparent); mask-image:linear-gradient(180deg,#000 90%,transparent)}
+.un-item{border-color:transparent; background:var(--surface-2)}
+.un-item:hover{background:var(--surface-3)}
+
+/* --- inset rows: borderless tonal fills (M3 surface containers) --- */
+.lrow,.hitem,.srow,.outchip{border-color:transparent}
+.lrow,.hitem,.srow{background:var(--surface-2)}
+.lrow:hover,.srow:hover{background:var(--surface-3)}
+
+/* --- Stream Output card sizes to its content (the level meter was removed) instead of stretching to
+       match the taller Now Playing card, which would otherwise leave dead space --- */
+.outcard{align-self:start}
+.bstats{display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-top:18px}
+.bstat{background:var(--surface-2); border-radius:13px; padding:12px 14px}
+.bs-k{font-size:11px; font-weight:600; color:var(--text-3); text-transform:uppercase; letter-spacing:.5px}
+.bs-v{font-family:"Roboto Flex"; font-size:16px; font-weight:700; color:var(--text); margin-top:4px; font-variant-numeric:tabular-nums}
+
+/* --- Signal Path: nudge the PREMIUM badge clear of the icon ring; keep dest top-aligned --- */
+.node .badge{top:-7px; right:22px}
+.node.dest{align-self:flex-start}
+
+/* --- buttons & transport: springy Expressive motion; correct dark on-primary text --- */
+.btn,.tbtn,.iconbtn,.minibtn,.pchip{transition:background .2s var(--ease), transform .22s var(--spring), box-shadow .2s var(--ease), color .2s, border-color .2s}
+.tbtn.main:hover{transform:translateY(-1px) scale(1.03)}
+.btn.primary:active,.tbtn.main:active{transform:scale(.95)}
+html[data-theme="dark"] .btn.primary,html[data-theme="dark"] .tbtn.main{color:#082140}
+html[data-theme="dark"] .btn.primary .msr,html[data-theme="dark"] .tbtn.main .msr{color:#082140}
+html[data-theme="dark"] .btn.primary:hover{background:var(--blue-d); color:#082140}
+
+/* --- schedule: soften today to a tonal tint (fixes dark white-on-blue), rounder palette chips --- */
+.cal-dayhdr.today{background:var(--blue-l); color:var(--blue-d)}
+.pchip{border-radius:12px}
+.palette{border-radius:var(--r-sm)}
+
+/* ================= responsive: fix the mobile app bar + hero ================= */
+@media(max-width:640px){
+  .topbar{height:56px; gap:10px; padding:0 14px}
+  .topbar .title{font-size:16px}
+  .topbar .sub{display:none}
+  .clock{display:none}
+  .status{display:none}          /* broadcast status is the first KPI card below — free the title's room */
+  .wrap{padding:16px 14px 48px}
+  .hero{flex-direction:column; gap:14px}
+  .art{width:100%; height:210px; max-width:none}
+  .np-track{max-width:none; white-space:normal; -webkit-mask-image:none; mask-image:none}
+  .transport{gap:8px}
+  .transport select{min-width:0}
+  .bstats{grid-template-columns:1fr 1fr}
+}
+
+/* ============================================================
+   Refinements from the design + accessibility review pass
+   ============================================================ */
+/* Signal Path: turn the skeleton-looking bars into thin "wires" carrying a
+   compact traveling pulse — reads as data flow, not a loading placeholder.
+   (Keeps the --flowx drive + .flow/.ready/.down state classes intact.) */
+.pipe{height:4px; margin-top:34px; border-radius:3px}
+.pipe.flow{background:var(--blue-l2)}
+.pipe.flow::after{background-size:24% 100%}
+.pipe.ready::after{background-size:26% 100%; opacity:.4}
+.pipe.down{background:var(--red-l)}
+
+/* PREMIUM badge sits clear ABOVE the Spotify ring instead of overlapping it */
+.node .badge{top:-11px; right:24px; padding:2px 6px; font-size:9px; letter-spacing:.3px}
+
+/* radius-scale harmony: album art + inner tiles track the card radius family */
+.art{border-radius:16px}
+.bstat{border-radius:14px}
+
+/* UP NEXT: start the overflow fade earlier so no row is sliced mid-thumbnail */
+.un-list{-webkit-mask-image:linear-gradient(180deg,#000 84%,transparent); mask-image:linear-gradient(180deg,#000 84%,transparent)}
+
+/* mobile: keep KPI headlines (e.g. "MP3 · 128k") on a single line */
+@media(max-width:640px){ .kpi .k-v{font-size:18px; white-space:nowrap} }
+
+/* ============================================================
+   Performance pass — keep the 24/7 page cheap on CPU/GPU
+   ============================================================ */
+
+/* Signal-path pulse rides the GPU compositor via transform:translateX — replaces the old
+   JS-driven :root `--flowx` custom-property write (which forced a whole-document style recalc
+   every frame) and the background-position keyframes (main-thread paint every frame). */
+.pipe.flow::after,.pipe.ready::after{content:"";position:absolute;top:0;right:auto;bottom:0;left:0;width:42%;
+  border-radius:inherit;background-image:linear-gradient(90deg,transparent,var(--blue),transparent);
+  background-size:100% 100%;background-position:0 0;background-repeat:no-repeat;
+  animation:pipepulse 2.2s linear infinite;will-change:transform}
+.pipe.ready::after{background-image:linear-gradient(90deg,transparent,var(--text-3),transparent);opacity:.4;animation-duration:3.4s}
+@keyframes pipepulse{from{transform:translateX(-110%)}to{transform:translateX(340%)}}
+
+/* Background tint on a fixed, composited pseudo-element instead of `background-attachment:fixed`,
+   which repainted the whole viewport on every scroll frame. */
+html{background:var(--bg)}
+body{background:transparent}
+html[data-theme="dark"] body{background:transparent}
+body::before{content:"";position:fixed;inset:0;z-index:-1;pointer-events:none;
+  background:radial-gradient(1200px 560px at 50% -10%, rgba(26,115,232,.06), transparent 68%)}
+html[data-theme="dark"] body::before{background:radial-gradient(1200px 560px at 50% -12%, rgba(138,180,248,.10), transparent 66%)}
+
+/* App bar: near-opaque tonal fill instead of a per-scroll-frame Gaussian backdrop-blur. */
+.topbar{-webkit-backdrop-filter:none; backdrop-filter:none;
+  background:color-mix(in srgb, var(--surface) 94%, transparent)}
+
+/* Status "ping" pulse: composited transform+opacity ring instead of an animated box-shadow,
+   which repainted + style-recalc'd every frame (60/s) 24/7 for a decorative dot. */
+.status.live .dot,.foot .fdot{animation:none; position:relative}
+.status.live .dot::after,.foot .fdot::after{content:""; position:absolute; inset:0; border-radius:50%;
+  background:var(--green); pointer-events:none; will-change:transform,opacity;
+  animation:pingpulse 1.8s ease-out infinite}
+@keyframes pingpulse{0%{transform:scale(1);opacity:.5} 70%,100%{transform:scale(2.6);opacity:0}}
+
+/* Progress fill scales on the compositor (transform) instead of animating `width` — the 0.5s position
+   tick kept re-triggering the .45s width transition, forcing a layout+recalc nearly every frame.
+   The (hover-only) handle snaps its position instead of animating `left` (also layout). */
+#pbar{width:100%; transform-origin:left center; transform:scaleX(0); transition:transform .45s linear}
+#phandle{transition:opacity .15s var(--ease)}
+</style>
+</head>
+<body class="booting">
+  <div class="topbar">
+    <div class="logo"><span class="msr">graphic_eq</span></div>
+    <div class="title">Audio Flow <b>Console</b></div>
+    <div class="sub">Spotify · BrightSign · Sonos</div>
+    <div class="spacer"></div>
+    <button class="iconbtn" id="themebtn" title="Toggle dark mode" aria-label="Toggle dark mode"><span class="msr" id="themeicon">dark_mode</span></button>
+    <div class="clock" id="clock">--:--:--</div>
+    <div class="status" id="livepill"><span class="dot"></span><span id="livetext">Connecting…</span></div>
+    <button class="avatar" id="avatar" title="Spotify account" aria-label="Spotify account"><span class="msr">person</span><span class="dotstat"></span></button>
+  </div>
+
+  <div class="wrap">
+  <div class="banner" id="authbanner">
+    <div class="b-ico"><span class="msr">link_off</span></div>
+    <div style="flex:1">
+      <div class="b-t" id="ban-t">Spotify not connected</div>
+      <div class="b-s" id="ban-s">Connect your Spotify account to control playback and run schedules from here.</div>
+    </div>
+    <button class="btn primary big" id="connectbtn"><span class="msr" style="font-size:18px">link</span>Connect Spotify</button>
+  </div>
+
+  <div class="kpis">
+    <div class="kpi" id="kpi-card-status"><div class="k-ico" id="kpi-status-ico"><span class="msr">sensors</span></div><div><div class="k-v" id="kpi-status">—</div><div class="k-l">Broadcast status</div></div></div>
+    <div class="kpi k-teal"><div class="k-ico"><span class="msr">cast_connected</span></div><div><div class="k-v" id="kpi-aud">0</div><div class="k-l">Connected outputs</div></div></div>
+    <div class="kpi k-purple"><div class="k-ico"><span class="msr">graphic_eq</span></div><div><div class="k-v" id="kpi-fmt">MP3</div><div class="k-l">Stream format</div></div></div>
+    <div class="kpi k-amber"><div class="k-ico"><span class="msr">schedule</span></div><div><div class="k-v" id="kpi-up">—</div><div class="k-l">Server uptime</div></div></div>
+  </div>
+  <div class="grid">
+    <div class="card col-7">
+      <h2><span class="msr">music_note</span> Now Playing</h2>
+      <div class="hero">
+        <img class="art" id="art" alt="" style="display:none"/>
+        <div class="art" id="artph"><span class="msr">album</span></div>
+        <div style="min-width:0;flex:1">
+          <p class="np-track" id="track">—</p>
+          <p class="np-artist" id="artist">Nothing playing yet</p>
+          <div class="np-meta" id="meta"></div>
+          <div class="progress" id="pwrap" role="slider" tabindex="0" aria-label="Seek position" aria-valuemin="0" aria-valuenow="0"><i id="pbar"></i><span id="phandle"></span></div>
+          <div class="time"><span id="t-cur">0:00</span><span id="t-dur">0:00</span></div>
+        </div>
+      </div>
+      <div class="transport">
+        <button class="tbtn" id="prevbtn" title="Previous track"><span class="msr">skip_previous</span></button>
+        <button class="tbtn main" id="toggle" title="Play / Pause"><span class="msr" id="toggleico">play_arrow</span></button>
+        <button class="tbtn" id="nextbtn" title="Next track"><span class="msr">skip_next</span></button>
+        <span class="sep"></span>
+        <select id="pl-top" class="pl-picker" title="Choose a playlist"><option value="">Loading playlists…</option></select>
+        <button class="btn primary" id="topplay"><span class="msr" style="font-size:18px">playlist_play</span>Play playlist</button>
+      </div>
+      <div class="upnext" id="upnext" hidden>
+        <div class="un-head"><span class="msr">queue_music</span> Up Next<span class="un-count" id="un-count"></span></div>
+        <ul class="un-list" id="un-list"></ul>
+      </div>
+    </div>
+
+    <div class="card col-5 outcard">
+      <h2 class="hd-teal"><span class="msr">podcasts</span> Stream Output</h2>
+      <div class="bstats" id="bstats">
+        <div class="bstat"><div class="bs-k">Format</div><div class="bs-v" id="bs-fmt">MP3</div></div>
+        <div class="bstat"><div class="bs-k">Bitrate</div><div class="bs-v" id="bs-rate">128 kbps</div></div>
+        <div class="bstat"><div class="bs-k">Sample rate</div><div class="bs-v">44.1 kHz</div></div>
+        <div class="bstat"><div class="bs-k">Listeners</div><div class="bs-v" id="bs-lis">0</div></div>
+      </div>
+      <div class="urlbar"><span class="msr" style="color:var(--text-3);font-size:18px">link</span>
+        <code id="streamurl">http://…</code>
+        <button class="btn" id="copybtn"><span class="msr" style="font-size:16px">content_copy</span>Copy</button>
+      </div>
+      <div class="sndctl" id="sndctl">
+        <div class="snd-top">
+          <label class="switch" title="Match song-to-song loudness"><input type="checkbox" id="norm-on"><span class="track"></span><span>Loudness leveling</span></label>
+          <span class="snd-badge" id="snd-badge"><span class="msr" style="font-size:14px">link</span> Gapless on</span>
+        </div>
+        <div class="snd-adj" id="snd-adj">
+          <label for="norm-gain">Level</label>
+          <input type="range" id="norm-gain" min="-6" max="6" step="1" value="0">
+          <span class="snd-val" id="norm-gain-v">0 dB</span>
+        </div>
+        <div class="snd-note">Evens out volume between songs so nothing jumps out. Songs still play back-to-back with no gap. Changing this re-buffers the stream for a few seconds.</div>
+      </div>
+    </div>
+
+    <div class="card col-12">
+      <h2 class="hd-purple"><span class="msr">account_tree</span> Signal Path</h2>
+      <div class="flow" id="flow">
+        <div class="node" id="n-spotify"><div class="ico"><span class="msr">cloud</span></div><div class="nm">Spotify</div><div class="sub" id="s-spotify">cloud</div></div>
+        <div class="pipe" id="p1"></div>
+        <div class="node" id="n-librespot"><div class="ico"><span class="msr">settings_input_antenna</span></div><div class="nm">Signage</div><div class="sub" id="s-librespot">librespot</div></div>
+        <div class="pipe" id="p2"></div>
+        <div class="node" id="n-ffmpeg"><div class="ico"><span class="msr">memory</span></div><div class="nm">Encoder</div><div class="sub" id="s-ffmpeg">ffmpeg · mp3</div></div>
+        <div class="pipe" id="p3"></div>
+        <div class="node" id="n-icecast"><div class="ico"><span class="msr">cell_tower</span></div><div class="nm">Broadcast</div><div class="sub" id="s-icecast">icecast</div></div>
+        <div class="pipe" id="p4"></div>
+        <div class="node dest" id="n-dest"><div class="ico"><span class="msr">devices</span></div><div class="nm">Destinations</div><div class="outs" id="outs"></div></div>
+      </div>
+    </div>
+
+    <div class="card col-8">
+      <h2 class="hd-green"><span class="msr">groups</span> Connected Outputs <span style="flex:1"></span><span class="chip count" id="audcount">0 live</span></h2>
+      <div class="list" id="audience"><div class="empty"><span class="msr">cast</span>No outputs connected to the stream yet.</div></div>
+    </div>
+
+    <div class="card col-4">
+      <h2 class="hd-pink"><span class="msr">monitor_heart</span> Pipeline Health</h2>
+      <div class="health" id="health"></div>
+    </div>
+
+    <div class="card col-12" id="controlcard">
+      <h2><span class="msr">play_circle</span> Playback &amp; Scheduling</h2>
+      <div class="ctl">
+        <div class="field">
+          <label for="pl-select">Playlist</label>
+          <select id="pl-select" class="pl-picker"><option value="">Loading playlists…</option></select>
+        </div>
+        <div class="field">
+          <label>&nbsp;</label>
+          <label class="switch"><input type="checkbox" id="pl-shuffle"><span class="track"></span>Shuffle</label>
+        </div>
+        <div class="field" style="flex:1"></div>
+        <button class="btn primary big" id="playbtn"><span class="msr" style="font-size:18px">play_arrow</span>Play now</button>
+        <button class="btn tonal big" id="pausebtn"><span class="msr" style="font-size:18px">pause</span>Pause</button>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="sched" id="sched">
+        <div class="sched-top">
+          <div class="sublabel"><span class="msr" style="font-size:16px">calendar_view_week</span> Weekly playback schedule</div>
+          <div class="sched-actions">
+            <span class="sched-now off" id="sched-now"><span class="dot"></span><span id="sched-now-t">Off-air</span></span>
+            <label class="switch" title="Turn the weekly schedule on or off"><input type="checkbox" id="sched-enabled" checked><span class="track"></span><span id="sched-en-lbl">Schedule on</span></label>
+          </div>
+        </div>
+        <div class="sched-hint"><b>1.</b> Pick a playlist below. &nbsp; <b>2.</b> Drag down a day to add a block. &nbsp; <b>3.</b> Drag a block to move it, its edges to resize, or click it to edit. &nbsp;Any empty time on the grid = silence.</div>
+        <div class="palette" id="palette"></div>
+        <div class="cal" id="cal">
+          <div class="cal-head">
+            <div class="cal-corner"></div>
+            <div class="cal-days" id="cal-days"></div>
+          </div>
+          <div class="cal-scroll" id="cal-scroll">
+            <div class="cal-body">
+              <div class="cal-axis" id="cal-axis"></div>
+              <div class="cal-cols" id="cal-cols"></div>
+            </div>
+          </div>
+          <div class="cal-empty"><span class="msr">touch_app</span><b>Your week is open — nothing scheduled</b><span>Pick a playlist above, then drag down any day to add when it plays.</span></div>
+        </div>
+        <div class="slog" id="schedlog"></div>
+      </div>
+    </div>
+  </div>
+  <footer class="foot"><span class="fdot" id="footdot"></span><span id="footnote">Connecting…</span><span style="flex:1"></span><span id="footmeta">Audio Flow Console</span></footer>
+  </div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+/* ---- idempotent DOM update layer: only touch the DOM when a value actually changed ---- */
+function setText(el,val){ if(el && el.textContent!==val) el.textContent=val; }
+function setAttr(el,name,val){ if(!el)return; val=val==null?null:String(val);
+  if(val==null){ if(el.hasAttribute(name)) el.removeAttribute(name); }
+  else if(el.getAttribute(name)!==val) el.setAttribute(name,val); }
+function setStyleProp(el,prop,val){ if(el && el.style.getPropertyValue(prop)!==val) el.style.setProperty(prop,val); }
+function setClassName(el,cls){ if(el && el.className!==cls) el.className=cls; }
+function el(html){ const t=document.createElement('template'); t.innerHTML=html.trim(); return t.content.firstElementChild; }
+function ensureEmpty(container,html){ const f=container.firstElementChild;
+  if(f && f.classList.contains('empty')) return; container.innerHTML=html; }
+// keyed list reconciler: add new rows, update existing in place, remove stale — no innerHTML churn.
+function reconcileList(container,items,keyFn,createFn,updateFn){
+  const existing=new Map();
+  for(const node of Array.from(container.children)){
+    const k=node.dataset?node.dataset.rk:null;
+    if(k!=null) existing.set(k,node); else node.remove();   // drop non-keyed nodes (e.g. .empty placeholder)
+  }
+  const seen=new Set(); let cursor=null;
+  items.forEach((item,i)=>{
+    const key=String(keyFn(item,i)); seen.add(key);
+    let node=existing.get(key), fresh=false;
+    if(!node){ node=createFn(item); node.dataset.rk=key; fresh=true; }
+    if(updateFn) updateFn(node,item,fresh);
+    const want=cursor?cursor.nextSibling:container.firstChild;
+    if(node!==want) container.insertBefore(node,want);
+    cursor=node;
+  });
+  for(const [k,node] of existing) if(!seen.has(k)) node.remove();
+}
+
+const THEME_KEY='af-theme';
+function applyTheme(t){document.documentElement.setAttribute('data-theme',t);const i=document.getElementById('themeicon');if(i)i.textContent=(t==='dark'?'light_mode':'dark_mode');}
+applyTheme(document.documentElement.getAttribute('data-theme')||'light');
+document.getElementById('themebtn').onclick=()=>{const cur=(document.documentElement.getAttribute('data-theme')==='dark')?'light':'dark';try{localStorage.setItem(THEME_KEY,cur);}catch(e){}applyTheme(cur);};
+const fmt=ms=>{ms=Math.max(0,ms|0);const s=Math.floor(ms/1000);return Math.floor(s/60)+':'+String(s%60).padStart(2,'0')};
+function uptime(iso){if(!iso)return '—';const t=Date.parse(iso);if(isNaN(t))return '—';let s=Math.floor((Date.now()-t)/1000);const d=Math.floor(s/86400);s%=86400;const h=Math.floor(s/3600);s%=3600;const m=Math.floor(s/60);return d?`${d}d ${h}h`:(h?`${h}h ${m}m`:`${m}m`);}
+const OUTKINDS={brightsign:{i:'tv',n:'BrightSign'},sonos:{i:'speaker',n:'Sonos'},vlc:{i:'play_circle',n:'VLC'},browser:{i:'language',n:'Browser'},other:{i:'cast',n:'Listener'}};
+
+let np={progress:0,duration:0,state:'idle',track:null,at:0};
+let lastToggleAt=0;               // optimistic-guard: suppress stale server state right after a play/pause click
+let dragging=false, dragPos=0, seekLockUntil=0; // scrub state
+const pwrap=$('pwrap');
+const pct=ms=>Math.max(0,Math.min(100,(ms/(np.duration||1))*100));
+// current playback position in ms, interpolated locally from the last baseline
+function expectedPos(){ return (np.state==='playing'&&np.duration)?Math.min(np.duration,np.progress+(Date.now()-np.at)):(np.progress||0); }
+function paintPos(ms){ const w=pct(ms); $('pbar').style.transform='scaleX('+(w/100).toFixed(4)+')'; if($('phandle'))$('phandle').style.left=w+'%';
+  $('t-cur').textContent=fmt(ms); if(pwrap)pwrap.setAttribute('aria-valuenow',Math.round(ms/1000)); }
+setInterval(()=>{
+  if(dragging) return;                  // pointer owns the bar while scrubbing
+  if(Date.now()<seekLockUntil) return;  // just seeked -> hold optimistic pos until the server confirms
+  if(np.duration){ paintPos(expectedPos()); $('t-dur').textContent=fmt(np.duration);
+    if(pwrap)pwrap.setAttribute('aria-valuemax',Math.round(np.duration/1000)); }
+},500);
+
+/* ---- scrub / seek interaction ---- */
+function seekable(){ return np.duration>0 && (np.state==='playing'||np.state==='paused'); }
+function posFromEvent(e){ if(!pwrap)return 0; const r=pwrap.getBoundingClientRect();
+  let f=(e.clientX-r.left)/r.width; f=Math.max(0,Math.min(1,f)); return Math.round(f*(np.duration||0)); }
+async function commitSeek(ms){
+  try{ const r=await fetch('/api/seek',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({position_ms:ms})});
+    if(!r.ok){ seekLockUntil=0; // failure -> let the next status snap the bar back to the truth
+      toast(r.status===409?'Signage device offline':r.status===401?'Connect Spotify first':r.status===429?'Spotify busy — try again':'Seek failed'); }
+    else toast('Seeked to '+fmt(ms));
+  }catch(e){ seekLockUntil=0; toast('Seek failed'); }
+}
+function beginSeek(target){ np.progress=target; np.at=Date.now(); paintPos(target); seekLockUntil=Date.now()+4000; commitSeek(target); }
+if(pwrap){
+  pwrap.addEventListener('pointerdown',e=>{ if(!seekable())return; dragging=true; pwrap.classList.add('dragging');
+    try{pwrap.setPointerCapture(e.pointerId);}catch(_){} dragPos=posFromEvent(e); paintPos(dragPos); e.preventDefault(); });
+  pwrap.addEventListener('pointermove',e=>{ if(dragging){ dragPos=posFromEvent(e); paintPos(dragPos); } });
+  const endDrag=()=>{ if(!dragging)return; dragging=false; pwrap.classList.remove('dragging'); beginSeek(dragPos); };
+  pwrap.addEventListener('pointerup',endDrag);
+  pwrap.addEventListener('pointercancel',endDrag);
+  pwrap.addEventListener('keydown',e=>{ if(!seekable())return; let t;
+    if(e.key==='ArrowRight')t=Math.min(np.duration,expectedPos()+5000);
+    else if(e.key==='ArrowLeft')t=Math.max(0,expectedPos()-5000); else return;
+    e.preventDefault(); beginSeek(t); });
+}
+
+function setNode(el,state,sub){
+  el.classList.remove('on','off','warnode');
+  if(state==='on')el.classList.add('on'); else if(state==='off')el.classList.add('off'); else if(state==='warn')el.classList.add('warnode');
+  if(sub!==undefined){const s=el.querySelector('.sub'); if(s)s.textContent=sub;}
+}
+function setPipe(el,mode){ el.className='pipe'+(mode?' '+mode:''); }
+
+function render(d){
+  if(d.auth) updateAuth(d.auth);
+  if(d.schedule) updateSchedStatus(d.schedule);
+  if(d.audio) updateAudioUi(d.audio);
+  const flowing = d.source && d.source.active;
+  setClassName($('livepill'), 'status'+(flowing?' live':(d.services&&d.services.icecast?'':' off')));
+  setText($('livetext'), flowing?'On air':(d.services&&d.services.icecast?'Idle · Ready':'Offline'));
+
+  // Spotify tier: prefer the real product field (needs user-read-private scope); otherwise infer from
+  // librespot — a librespot Spotify Connect device can only authenticate on a Premium account, so an
+  // authed librespot IS premium. No hardcoded claim: this tracks real backend state.
+  const premium = (d.auth && d.auth.product==='premium') || !!(d.librespot && d.librespot.authed);
+  const spTier = d.librespot&&d.librespot.authed ? (premium?'Premium':((d.auth&&d.auth.product)||'linked')) : 'cloud';
+  setNode($('n-spotify'), d.librespot&&d.librespot.authed?'on':'warn', spTier);
+  setNode($('n-librespot'), d.services&&d.services.stream?'on':'off', 'librespot');
+  setNode($('n-ffmpeg'), flowing?'on':(d.services&&d.services.stream?'warn':'off'), flowing?('mp3 · '+((d.source&&d.source.bitrate)||d.streamBitrate||128)+'k'):'idle');
+  setNode($('n-icecast'), d.services&&d.services.icecast?'on':'off', 'icecast');
+  const _ico=$('n-spotify').querySelector('.ico'); let b=_ico.querySelector('.badge');
+  if(premium){ if(!b){ b=document.createElement('div'); b.className='badge'; b.textContent='PREMIUM'; _ico.appendChild(b); } }
+  else if(b){ b.remove(); }
+
+  setPipe($('p1'), d.librespot&&d.librespot.authed ? (flowing?'flow':'ready') : 'down');
+  setPipe($('p2'), d.services&&d.services.stream ? (flowing?'flow':'ready') : 'down');
+  setPipe($('p3'), flowing?'flow':(d.services&&d.services.stream?'ready':'down'));
+  setPipe($('p4'), d.services&&d.services.icecast ? (flowing?'flow':'ready') : 'down');
+
+  // Destinations: BrightSign is the known target (real connected state); any other kind appears only when observed.
+  const aud=d.audience||[];
+  const groups={}; aud.forEach(a=>{(groups[a.kind]=groups[a.kind]||[]).push(a);});
+  const known=['brightsign']; const outItems=[];
+  known.forEach(k=>{ const arr=groups[k]||[];
+    outItems.push({key:k, i:OUTKINDS[k].i, n:OUTKINDS[k].n, on:arr.length>0, s:arr.length?arr.length+' connected':'not connected'}); });
+  Object.keys(groups).forEach(k=>{ if(!known.includes(k)){ const meta=OUTKINDS[k]||OUTKINDS.other;
+    outItems.push({key:k, i:meta.i, n:meta.n, on:true, s:groups[k].length+' connected'}); }});
+  reconcileList($('outs'), outItems, it=>it.key,
+    ()=>el('<div class="outchip"><span class="msr"></span><div><div class="l"></div><div class="s"></div></div></div>'),
+    (node,it)=>{ node.classList.toggle('on', it.on);
+      setText(node.querySelector('.msr'), it.i); setText(node.querySelector('.l'), it.n); setText(node.querySelector('.s'), it.s); });
+  $('n-dest').classList.toggle('on', aud.length>0);
+
+  const p=d.nowplaying||{state:'idle'};
+  // reflect the currently-playing playlist context into the .pl-picker selects
+  const ctxId = p.contextType==='playlist' ? (p.contextId||null) : null;
+  if(ctxId!==ctxPl.id || (p.contextName||null)!==ctxPl.name){ ctxPl={id:ctxId, name:p.contextName||null}; syncPickers(); }
+
+  const optimistic = Date.now()-lastToggleAt < 4000; // just clicked play/pause -> don't let stale server state clobber the UI
+  if(!optimistic){ try{setToggleIcon(p.state==='playing');}catch(e){} }
+  if(p.state==='playing'||p.state==='paused'){
+    setText($('track'), p.track||'—');
+    setText($('artist'), (p.artists||'')+(p.album?(' · '+p.album):''));
+    const trackChanged=(p.track||null)!==np.track;
+    const desiredState = optimistic ? np.state : p.state;
+    if(dragging){                                     // scrubbing -> keep the drag position, only refresh metadata
+      np.duration=p.duration||np.duration; np.track=p.track||null;
+    } else if(Date.now()<seekLockUntil && !trackChanged){ // post-seek -> hold optimistic pos until the server catches up
+      np.duration=p.duration||np.duration; np.track=p.track||null;
+      if(Math.abs((p.progress||0)-expectedPos())<2500) seekLockUntil=0;
+    } else {
+      const drift = Math.abs((p.progress||0)-expectedPos());
+      // Only re-baseline when something actually changed; otherwise the local interpolation already
+      // matches the (server-extrapolated) progress, so leaving np alone avoids the every-tick sawtooth.
+      if(trackChanged || (!optimistic && (desiredState!==np.state || drift>1500))){
+        seekLockUntil=0;
+        np={progress:p.progress||0,duration:p.duration||0,state:desiredState,track:p.track||null,at:Date.now()};
+      } else {
+        np.duration=p.duration||np.duration; np.track=p.track||null; np.state=desiredState;
+      }
+    }
+    if(p.art){$('art').src=p.art;$('art').style.display='';$('artph').style.display='none';}
+    else{$('art').style.display='none';$('artph').style.display='grid';}
+    const badge = desiredState;                       // reflect the optimistic state in the chip too
+    const chips=[{key:'state', icon:badge==='playing'?'play_arrow':'pause', label:badge}];
+    if(p.contextType==='playlist'&&p.contextName) chips.push({key:'ctx', icon:'queue_music', label:p.contextName});
+    if(p.device) chips.push({key:'device', icon:'speaker', label:p.device});
+    if(p.shuffle) chips.push({key:'shuffle', icon:'shuffle', label:'shuffle'});
+    if(p.repeat&&p.repeat!=='off') chips.push({key:'repeat', icon:'repeat', label:p.repeat});
+    reconcileList($('meta'), chips, c=>c.key,
+      c=>el('<span class="chip'+(c.key==='state'?' accent':'')+'"><span class="msr"></span><span class="ct"></span></span>'),
+      (node,c)=>{ setText(node.querySelector('.msr'), c.icon); setText(node.querySelector('.ct'), c.label); });
+  } else {
+    setText($('track'), p.state==='ratelimited'?'Rate-limited':'—');
+    setText($('artist'), p.state==='ratelimited'?'Spotify API cooling down — track info shortly':'Nothing playing yet');
+    if($('meta').firstChild) $('meta').innerHTML=''; $('art').style.display='none';$('artph').style.display='grid';
+    np.state=p.state; np.duration=0; np.track=null; dragging=false; seekLockUntil=0; // stop the interpolator (was left 'playing' -> flicker)
+    $('pbar').style.transform='scaleX(0)'; if($('phandle'))$('phandle').style.left='0'; setText($('t-cur'),'0:00');
+  }
+
+  setText($('audcount'), (d.audienceCount||0)+' live');
+  if(!aud.length){
+    ensureEmpty($('audience'), '<div class="empty"><span class="msr">cast</span>No outputs connected to the stream yet.</div>');
+  } else {
+    reconcileList($('audience'), aud, a=>(a.ip||'?')+'|'+(a.ua||''),
+      ()=>el('<div class="lrow fadein"><div class="av"><span class="msr"></span></div><div><div class="nm"></div><div class="ip"></div></div><div class="dur"></div></div>'),
+      (node,a,fresh)=>{ const meta=OUTKINDS[a.kind]||OUTKINDS.other;
+        if(!fresh) node.classList.remove('fadein');            // animate on insert only, never on refresh
+        setText(node.querySelector('.av .msr'), meta.i);
+        setText(node.querySelector('.nm'), meta.n);
+        setText(node.querySelector('.ip'), (a.ip||'?')+' · '+((a.ua||'').slice(0,34)||'unknown'));
+        setText(node.querySelector('.dur'), fmt((a.connected||0)*1000)); });
+  }
+
+  const linkedTier = premium?'premium':((d.auth&&d.auth.product)||'linked');
+  const H=[
+    ['Stream service', d.services&&d.services.stream, 'librespot → ffmpeg'],
+    ['Icecast', d.services&&d.services.icecast, 'broadcast :8000'],
+    ['Spotify account', d.librespot&&d.librespot.authed, d.librespot&&d.librespot.authed?(linkedTier+' · linked'):'not linked'],
+    ['Audio flowing', flowing, flowing?'live encoding':'idle'],
+  ].map(([n,ok,sub])=>({key:n,n,ok:!!ok,sub}));
+  reconcileList($('health'), H, it=>it.key,
+    ()=>el('<div class="hitem"><span class="st"></span><div><div class="nm"></div><div class="sub"></div></div></div>'),
+    (node,it)=>{ node.classList.toggle('ok', it.ok); node.classList.toggle('warnst', !it.ok && it.n==='Audio flowing');
+      setText(node.querySelector('.nm'), it.n);
+      setText(node.querySelector('.sub'), (it.ok?'active':(it.n==='Audio flowing'?'idle':'down'))+' · '+it.sub); });
+
+  if(d.streamUrl) setText($('streamurl'), d.streamUrl);
+
+  // KPI strip
+  setText($('kpi-status'), flowing?'On air':(d.services&&d.services.icecast?'Idle':'Offline'));
+  setStyleProp($('kpi-status'),'color', flowing?'var(--green)':(d.services&&d.services.icecast?'var(--text)':'var(--red)'));
+  $('kpi-card-status').classList.toggle('live',!!flowing);
+  animNum($('kpi-aud'), d.audienceCount||0);
+  setText($('kpi-fmt'), 'MP3 · '+((flowing&&d.source&&d.source.bitrate)||d.streamBitrate||128)+'k');
+  setText($('kpi-up'), uptime(d.hostStart||(d.icecast&&d.icecast.serverStart)));
+  // broadcast-detail tiles in the Live Output card
+  if($('bs-rate')) setText($('bs-rate'), (((flowing&&d.source&&d.source.bitrate)||d.streamBitrate||128))+' kbps');
+  if($('bs-lis')) setText($('bs-lis'), String(d.audienceCount||0));
+  setText($('footmeta'), 'Audio Flow Console · host '+(d.host||'')+' · '+(d.version||''));
+  if(document.body.classList.contains('booting')) document.body.classList.remove('booting');
+}
+
+async function copyText(text){
+  // navigator.clipboard only exists in a secure context (https/localhost); the dashboard is served over
+  // plain http on a LAN IP, so fall back to a hidden-textarea + execCommand('copy') there.
+  try{ if(navigator.clipboard && window.isSecureContext){ await navigator.clipboard.writeText(text); return true; } }catch(e){}
+  try{
+    const ta=document.createElement('textarea'); ta.value=text;
+    ta.setAttribute('readonly',''); ta.style.position='fixed'; ta.style.top='-9999px'; ta.style.opacity='0';
+    document.body.appendChild(ta); ta.focus(); ta.select(); ta.setSelectionRange(0,text.length);
+    const ok=document.execCommand('copy'); document.body.removeChild(ta); return ok;
+  }catch(e){ return false; }
+}
+$('copybtn').onclick=async()=>{
+  const url=$('streamurl').textContent;
+  const ok=await copyText(url);
+  if(ok){ $('copybtn').innerHTML='<span class="msr" style="font-size:16px">check</span>Copied';
+    setTimeout(()=>$('copybtn').innerHTML='<span class="msr" style="font-size:16px">content_copy</span>Copy',1500); }
+  else { toast('Couldn’t copy automatically — select the URL and copy it manually'); }
+};
+// clicking the URL selects it, so manual copy is one gesture even if the clipboard API is blocked
+if($('streamurl')) $('streamurl').style.cursor='text', $('streamurl').onclick=()=>{
+  const r=document.createRange(); r.selectNodeContents($('streamurl'));
+  const s=getSelection(); s.removeAllRanges(); s.addRange(r);
+};
+
+function tick(){$('clock').textContent=new Date().toLocaleTimeString();}tick();setInterval(tick,1000);
+
+function setFoot(live){ setText($('footnote'), live?'Live · auto-refreshing':'Reconnecting…');
+  const fd=$('footdot'); if(fd) fd.style.background=live?'var(--green)':'var(--amber)'; }
+function connect(){
+  let es; try{ es=new EventSource('/api/stream'); }catch(e){ return poll(); }
+  es.addEventListener('open',()=>setFoot(true));
+  es.addEventListener('status',e=>{ setFoot(true); try{render(JSON.parse(e.data));}catch(_){}});
+  es.onerror=()=>{ setFoot(false); };
+}
+async function poll(){ try{const r=await fetch('/api/status');render(await r.json());}catch(e){} setTimeout(poll,3000);}
+connect();
+fetch('/api/status').then(r=>r.json()).then(render).catch(()=>{});
+
+/* ===================== controls · auth · scheduler ===================== */
+const toastEl=document.createElement('div');toastEl.className='toast';document.body.appendChild(toastEl);
+let toastT;
+function toast(msg,ms=2800){toastEl.textContent=msg;toastEl.classList.add('show');clearTimeout(toastT);toastT=setTimeout(()=>toastEl.classList.remove('show'),ms);}
+function escapeHtml(s){return String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+function normId(x){const m=String(x||'').match(/playlist[/:]([A-Za-z0-9]+)/);return m?m[1]:String(x||'').replace(/[^A-Za-z0-9]/g,'');}
+
+/* ---- playlist pickers: reflect the currently-playing playlist, persist manual picks ---- */
+let playlists=[];
+let ctxPl={id:null,name:null};                 // currently-playing playlist (from nowplaying.context*)
+const PL_KEY=id=>'af-pl-'+id;
+function getManual(id){ try{return localStorage.getItem(PL_KEY(id))||'';}catch(e){return '';} }
+function setManual(id,v){ try{ if(v)localStorage.setItem(PL_KEY(id),v); else localStorage.removeItem(PL_KEY(id)); }catch(e){} }
+function setPickersMsg(html){document.querySelectorAll('.pl-picker').forEach(s=>{s.innerHTML=html;s.dataset.optsig='';});}
+function optionsHtml(){
+  let h='<option value="">— select playlist —</option>';
+  if(ctxPl.id && !playlists.some(p=>p.id===ctxPl.id))          // now-playing playlist that isn't one of the user's own
+    h+='<option value="'+ctxPl.id+'">'+escapeHtml(ctxPl.name||'Current playlist')+' · now playing</option>';
+  h+=playlists.map(p=>'<option value="'+p.id+'">'+escapeHtml(p.name)+(p.tracks?(' · '+p.tracks+' tracks'):'')+'</option>').join('');
+  return h;
+}
+function syncPickers(){
+  const html=optionsHtml();
+  document.querySelectorAll('.pl-picker').forEach(sel=>{
+    if(document.activeElement===sel) return;                   // don't yank an open/focused dropdown
+    if(sel.dataset.optsig!==html){ sel.innerHTML=html; sel.dataset.optsig=html; }
+    const has=v=>v&&[...sel.options].some(o=>o.value===v);
+    const manual=getManual(sel.id);
+    sel.value = has(manual)?manual : (has(ctxPl.id)?ctxPl.id : '');  // manual pick wins, else current playlist
+  });
+}
+document.querySelectorAll('.pl-picker').forEach(sel=>{           // programmatic .value sets don't fire 'change', so this only records explicit user picks
+  sel.addEventListener('change',()=>setManual(sel.id, sel.value));
+});
+async function loadPlaylists(){
+  try{
+    const r=await fetch('/api/playlists');
+    if(r.status===401){setPickersMsg('<option value="">Connect Spotify to load playlists</option>');return;}
+    if(!r.ok) throw 0;
+    const j=await r.json(); playlists=j.playlists||[];
+    syncPickers(); renderPalette(); renderCols();   // playlists may arrive after the schedule loads — refresh the paint palette
+  }catch(e){ setPickersMsg('<option value="">Could not load playlists</option>'); }
+}
+
+/* ===================== weekly playback timeline (drag-to-paint calendar) ===================== */
+const HOUR_H=48, GRID_H=HOUR_H*24, SNAP=15;                 // HOUR_H MUST match the .cal-col CSS gridline gradient
+const DOWFULL=['Sun','Mon','Tue','Wed','Thu','Fri','Sat'];
+// curated hues, all legible under white text; assigned by playlist ORDER so blocks are vivid and distinct
+const PAL=['#1a73e8','#00897b','#2e7d32','#8e24aa','#e65100','#c62828','#3949ab','#ad1457','#00838f','#546e7a'];
+function clampv(v,a,b){ return Math.max(a,Math.min(b,v)); }
+function plColor(id){
+  const i=playlists.findIndex(p=>p.id===id);
+  if(i>=0) return PAL[i%PAL.length];                        // stable color per playlist, by list order
+  let h=0; const s=String(id||''); for(let k=0;k<s.length;k++) h=(h*31+s.charCodeAt(k))>>>0; return PAL[h%PAL.length];  // fallback for ids not in the user's list
+}
+function fmtMin(m){ m=((Math.round(m)%1440)+1440)%1440; const h=Math.floor(m/60),mm=m%60,ap=h<12?'a':'p'; let hh=h%12; if(hh===0)hh=12; return hh+(mm?':'+String(mm).padStart(2,'0'):'')+ap; }
+function fmtMinFull(m){ if(m>=1440) return '12:00 AM'; const h=Math.floor(m/60),mm=m%60,ap=h<12?'AM':'PM'; let hh=h%12; if(hh===0)hh=12; return hh+':'+String(mm).padStart(2,'0')+' '+ap; }
+function plName(id){ const p=playlists.find(x=>x.id===id); if(p) return p.name; if(id===ctxPl.id&&ctxPl.name) return ctxPl.name; return 'Playlist'; }
+
+let blocks=[], schedEnabled=true, schedActiveId=null, brush=null, selBlockId=null, calBuilt=false, drag=null;
+
+/* build the static grid once (headers, hour axis, 7 day columns) */
+function buildCalScaffold(){
+  if(calBuilt) return;
+  const days=$('cal-days'), axis=$('cal-axis'), cols=$('cal-cols');
+  if(!days||!axis||!cols) return;
+  const today=new Date().getDay();
+  days.innerHTML=DOWFULL.map((d,i)=>'<div class="cal-dayhdr'+(i===today?' today':'')+'" data-d="'+i+'">'+d+'</div>').join('');
+  axis.style.height=GRID_H+'px';
+  let ax=''; for(let h=1;h<24;h++) ax+='<div class="cal-hour" style="top:'+(h*HOUR_H)+'px">'+fmtMin(h*60)+'</div>';
+  axis.innerHTML=ax;
+  cols.innerHTML=DOWFULL.map((d,i)=>'<div class="cal-col'+(i===today?' today':'')+'" data-d="'+i+'" style="height:'+GRID_H+'px"></div>').join('');
+  cols.addEventListener('pointerdown',onDown);
+  cols.addEventListener('pointermove',onMove);
+  cols.addEventListener('pointerup',onUp);
+  cols.addEventListener('pointercancel',onUp);
+  calBuilt=true;
+  const sc=$('cal-scroll'); if(sc) sc.scrollTop=Math.max(0,7*HOUR_H-8);   // open near 7am
+}
+
+/* geometry */
+function yInCol(clientY,col){ const r=col.getBoundingClientRect(); return clampv(clientY-r.top,0,GRID_H); }
+function y2min(y){ return clampv(Math.round((y/GRID_H*1440)/SNAP)*SNAP,0,1440); }
+function min2y(m){ return m/1440*GRID_H; }
+function colByDay(day){ return $('cal-cols')?$('cal-cols').querySelector('.cal-col[data-d="'+day+'"]'):null; }
+// free vertical channel [lo,hi] on `day` around `anchor`, excluding block `ignoreId` — prevents overlaps
+function freeChannel(day,anchor,ignoreId){
+  let lo=0,hi=1440;
+  for(const b of blocks){ if(b.day!==day||b.id===ignoreId) continue;
+    if(b.end<=anchor) lo=Math.max(lo,b.end);
+    else if(b.start>=anchor) hi=Math.min(hi,b.start);
+    else lo=Math.max(lo,b.end); }
+  return [lo,hi];
+}
+
+/* pointer drag: create (empty), move (body), resize (edges) */
+function onDown(e){
+  if(!schedEnabled) return;
+  if(e.button!=null && e.button!==0) return;
+  const col=e.target.closest('.cal-col'); if(!col) return;
+  const day=+col.dataset.d, y=yInCol(e.clientY,col);
+  const blkEl=e.target.closest('.cal-block');
+  if(blkEl && blkEl.dataset.id){
+    const id=blkEl.dataset.id, b=blocks.find(x=>x.id===id); if(!b) return;
+    const handle=e.target.closest('.blk-h');
+    const mode=handle?(handle.classList.contains('top')?'rt':'rb'):'move';
+    const [lo,hi]=freeChannel(day,(b.start+b.end)/2,id);
+    drag={mode,day,id,startY:e.clientY,moved:false,grabOff:y2min(y)-b.start,origStart:b.start,origEnd:b.end,lo,hi};
+    $('cal-cols').setPointerCapture(e.pointerId); e.preventDefault(); return;
+  }
+  if(!brush){ toast('Pick a playlist first'); return; }
+  const anchor=y2min(y), [lo,hi]=freeChannel(day,anchor,null);
+  if(hi-lo<SNAP) return;                       // no free room where they clicked
+  const a=clampv(anchor,lo,hi-SNAP);
+  drag={mode:'create',day,id:null,startY:e.clientY,moved:false,anchor:a,lo,hi,curStart:a,curEnd:clampv(a+SNAP,lo,hi)};
+  $('cal-cols').setPointerCapture(e.pointerId); e.preventDefault(); renderCols();
+}
+function onMove(e){
+  if(!drag) return;
+  const col=colByDay(drag.day); if(!col) return;
+  const m=y2min(yInCol(e.clientY,col));
+  if(Math.abs(e.clientY-drag.startY)>3) drag.moved=true;
+  if(drag.mode==='create'){
+    drag.curStart=clampv(Math.min(drag.anchor,m),drag.lo,drag.hi);
+    drag.curEnd  =clampv(Math.max(drag.anchor,m),drag.lo,drag.hi);
+  } else {
+    const b=blocks.find(x=>x.id===drag.id); if(!b){drag=null;return;}
+    if(drag.mode==='move'){ const dur=drag.origEnd-drag.origStart; const s=clampv(m-drag.grabOff,drag.lo,drag.hi-dur); b.start=s; b.end=s+dur; }
+    else if(drag.mode==='rt'){ b.start=clampv(m,drag.lo,b.end-SNAP); }
+    else if(drag.mode==='rb'){ b.end=clampv(m,b.start+SNAP,drag.hi); }
+  }
+  renderCols(); e.preventDefault();
+}
+function onUp(e){
+  if(!drag) return;
+  const d=drag; drag=null;
+  try{ $('cal-cols').releasePointerCapture(e.pointerId); }catch(_){}
+  if(d.mode==='create'){
+    let s=d.curStart, en=d.curEnd;
+    if(!d.moved){ s=d.anchor; en=clampv(s+60,d.lo,d.hi); if(en-s<SNAP) s=clampv(en-60,d.lo,d.hi); }  // pure click/tap (no drag) => ~1h default
+    if(en-s<SNAP){ renderCols(); return; }
+    const nb={id:'b'+Date.now().toString(36)+Math.floor(Math.random()*1e6).toString(36),
+      day:d.day,start:s,end:en,playlist:brush,name:plName(brush),shuffle:false};
+    blocks.push(nb); selBlockId=nb.id; saveBlocks(); renderCols();
+    try{ if(!localStorage.getItem('af-sched-taught')){ localStorage.setItem('af-sched-taught','1'); openPop(nb.id); } }catch(e){}  // teach the editor on the very first block
+
+  } else {
+    if(!d.moved && d.mode==='move'){ selBlockId=d.id; renderCols(); openPop(d.id); return; }  // click without drag => edit
+    saveBlocks(); renderCols();
+  }
+}
+
+/* render blocks + ghost + now-line into the day columns */
+function blockHtml(b,isGhost){
+  const top=min2y(b.start), h=Math.max(14,min2y(b.end)-min2y(b.start)), col=plColor(b.playlist);
+  const nm=isGhost?plName(b.playlist):(b.name||plName(b.playlist));
+  const sel=(!isGhost && b.id===selBlockId), showTime=h>=30;
+  return '<div class="cal-block'+(isGhost?' ghost':'')+(sel?' sel':'')+(b.shuffle?' sh':'')+'"'
+    +(isGhost?'':' data-id="'+b.id+'"')
+    +' style="top:'+top+'px;height:'+h+'px;background:'+col+'">'
+    +(isGhost?'':'<div class="blk-h top"></div>')
+    +(b.shuffle?'<span class="blk-x msr" title="Shuffle">shuffle</span>':'')
+    +'<div class="blk-name">'+escapeHtml(nm)+'</div>'
+    +(showTime?'<div class="blk-time">'+fmtMin(b.start)+'–'+fmtMin(b.end)+'</div>':'')
+    +(isGhost?'':'<div class="blk-h bot"></div>')
+    +'</div>';
+}
+function renderCols(){
+  if(!calBuilt) return;
+  const cols=$('cal-cols'); if(!cols) return;
+  const cal=$('cal'); if(cal) cal.classList.toggle('is-empty', blocks.length===0);   // show the "drag to add" hint on a blank grid
+  const byDay=[[],[],[],[],[],[],[]];
+  for(const b of blocks) if(byDay[b.day]) byDay[b.day].push(b);
+  const ghost=(drag&&drag.mode==='create'&&drag.curEnd-drag.curStart>=SNAP)
+    ?{day:drag.day,start:drag.curStart,end:drag.curEnd,playlist:brush}:null;
+  [...cols.children].forEach(col=>{
+    const day=+col.dataset.d; let html='';
+    for(const b of byDay[day]) html+=blockHtml(b,false);
+    if(ghost&&ghost.day===day) html+=blockHtml(ghost,true);
+    col.innerHTML=html;
+  });
+  renderNowLine();
+}
+let lastTodayDow=-1;
+function refreshToday(){                                    // keep the 'today' header/column highlight correct across midnight
+  const today=new Date().getDay();
+  if(today===lastTodayDow) return; lastTodayDow=today;
+  document.querySelectorAll('#cal-days .cal-dayhdr').forEach(h=>h.classList.toggle('today',+h.dataset.d===today));
+  document.querySelectorAll('#cal-cols .cal-col').forEach(c=>c.classList.toggle('today',+c.dataset.d===today));
+}
+function renderNowLine(){
+  const cols=$('cal-cols'); if(!cols) return;
+  refreshToday();
+  cols.querySelectorAll('.cal-now').forEach(n=>n.remove());
+  const now=new Date(), col=colByDay(now.getDay()); if(!col) return;
+  const ln=document.createElement('div'); ln.className='cal-now';
+  ln.style.top=min2y(now.getHours()*60+now.getMinutes())+'px'; col.appendChild(ln);
+}
+
+/* playlist palette (the paint brush) */
+function renderPalette(){
+  const el=$('palette'); if(!el) return;
+  if(!playlists.length){ el.innerHTML='<span class="p-empty">No playlists loaded — connect Spotify to build a schedule.</span>'; return; }
+  if(!brush || !playlists.some(p=>p.id===brush)) brush=playlists[0].id;
+  el.innerHTML='<span class="p-lead"><span class="msr">brush</span>Paint with</span>'+playlists.map(p=>{
+    const c=plColor(p.id), on=p.id===brush;
+    return '<button type="button" class="pchip'+(on?' on':'')+'" data-pl="'+p.id+'"'+(on?' style="background:'+c+';border-color:'+c+'"':'')+'>'
+      +(on?'<span class="msr chk">check</span>':'<span class="sw" style="background:'+c+'"></span>')
+      +'<span class="nm">'+escapeHtml(p.name)+'</span></button>';
+  }).join('');
+  el.querySelectorAll('.pchip').forEach(c=>c.onclick=()=>{ brush=c.dataset.pl; renderPalette(); });
+}
+
+/* per-block editor popover */
+function openPop(id){
+  closePop();
+  const b=blocks.find(x=>x.id===id); if(!b) return;
+  selBlockId=id;
+  const opts=playlists.map(p=>'<option value="'+p.id+'"'+(p.id===b.playlist?' selected':'')+'>'+escapeHtml(p.name)+'</option>').join('');
+  const extra=(!playlists.some(p=>p.id===b.playlist))?'<option value="'+b.playlist+'" selected>'+escapeHtml(b.name||'Current playlist')+'</option>':'';
+  const el=document.createElement('div'); el.className='blk-pop'; el.id='blk-pop';
+  el.innerHTML=
+    '<div class="pop-when"><span class="sw" style="background:'+plColor(b.playlist)+'"></span>'+DOWFULL[b.day]+' · '+fmtMinFull(b.start)+' – '+fmtMinFull(b.end)+'</div>'
+    +'<div><label>Playlist</label><select id="pop-pl">'+extra+opts+'</select></div>'
+    +'<label class="switch"><input type="checkbox" id="pop-sh"'+(b.shuffle?' checked':'')+'><span class="track"></span>Shuffle</label>'
+    +'<div class="pop-foot"><button class="minibtn danger" id="pop-del" title="Delete block"><span class="msr">delete</span></button><span class="grow"></span>'
+    +'<button class="btn primary" id="pop-done">Done</button></div>';
+  document.body.appendChild(el);
+  positionPop(el,id);
+  el.querySelector('#pop-pl').onchange=ev=>{ const bb=blocks.find(x=>x.id===id); if(!bb) return; bb.playlist=ev.target.value; bb.name=plName(bb.playlist);
+    const sw=el.querySelector('.pop-when .sw'); if(sw) sw.style.background=plColor(bb.playlist); saveBlocks(); renderCols(); };
+  el.querySelector('#pop-sh').onchange=ev=>{ const bb=blocks.find(x=>x.id===id); if(!bb) return; bb.shuffle=ev.target.checked; saveBlocks(); renderCols(); };
+  el.querySelector('#pop-del').onclick=()=>{ blocks=blocks.filter(x=>x.id!==id); selBlockId=null; closePop(); saveBlocks(); renderCols(); toast('Block removed'); };
+  el.querySelector('#pop-done').onclick=closePop;
+  renderCols();
+}
+function positionPop(el,id){
+  const cols=$('cal-cols'), blkEl=cols&&cols.querySelector('.cal-block[data-id="'+id+'"]');
+  const r=blkEl?blkEl.getBoundingClientRect():{right:innerWidth/2,left:innerWidth/2,top:innerHeight/2};
+  const pw=el.offsetWidth||250, ph=el.offsetHeight||210, gap=8;
+  let left=r.right+gap; if(left+pw>innerWidth-8) left=r.left-pw-gap; if(left<8) left=8;
+  let top=r.top; if(top+ph>innerHeight-8) top=innerHeight-ph-8; if(top<8) top=8;
+  el.style.left=left+'px'; el.style.top=top+'px';
+}
+function closePop(){ const el=$('blk-pop'); if(el) el.remove(); if(selBlockId){ selBlockId=null; renderCols(); } }
+document.addEventListener('pointerdown',e=>{ if(!$('blk-pop')) return;
+  if(e.target.closest('#blk-pop')||e.target.closest('.cal-block')) return; closePop(); },true);
+
+/* persistence (optimistic + debounced). `dirty`/`editSeq` protect unsaved local edits: the 30s poll
+   and stale in-flight responses must never overwrite the local model while an edit is pending. Block
+   saves deliberately DON'T send `enabled` — /api/schedules/enabled is the sole authority for that
+   field — so a block edit can never accidentally flip automation on/off. We never re-adopt the whole
+   array from the response (client ids are stable and 15-min snaps already align with the server). */
+let saveT=null, dirty=false, editSeq=0;
+function saveBlocks(){
+  dirty=true; editSeq++;
+  clearTimeout(saveT);
+  saveT=setTimeout(async()=>{
+    const seq=editSeq;                                     // this payload reflects every edit up to now
+    try{
+      const payload=blocks.map(b=>({id:b.id,day:b.day,start:b.start,end:b.end,playlist:b.playlist,name:b.name,shuffle:!!b.shuffle}));
+      const r=await fetch('/api/schedules',{method:'PUT',headers:{'Content-Type':'application/json'},body:JSON.stringify({blocks:payload})});
+      const j=await r.json();
+      if(!r.ok){ toast('Could not save schedule'); return; }
+      if(seq===editSeq){ dirty=false; schedActiveId=j.activeId||null; }   // nothing edited since we sent — server is now in sync
+    }catch(e){ toast('Could not save schedule'); }
+  },250);
+}
+
+/* automation on/off */
+function updateEnabledUi(){
+  const s=$('sched'); if(s) s.classList.toggle('disabled',!schedEnabled);
+  const cb=$('sched-enabled'); if(cb && document.activeElement!==cb) cb.checked=schedEnabled;
+  setText($('sched-en-lbl'), schedEnabled?'Schedule on':'Schedule off');
+}
+let enabledPendingUntil=0;
+$('sched-enabled').addEventListener('change',async()=>{
+  schedEnabled=$('sched-enabled').checked; enabledPendingUntil=Date.now()+3500; updateEnabledUi();  // ignore stale SSE echoes briefly
+  try{ await fetch('/api/schedules/enabled',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({enabled:schedEnabled})}); }catch(e){}
+  toast(schedEnabled?'Schedule on — playback follows the grid':'Schedule off — manual control only');
+});
+
+/* live status pill (fed by SSE fullStatus.schedule) */
+function updateSchedStatus(s){
+  if(!s) return;
+  const el=$('sched-now'), t=$('sched-now-t'); if(!el) return;
+  if(!s.enabled){ el.className='sched-now off'; setText(t,'Schedule off'); }
+  else if(s.active){ el.className='sched-now live'; setText(t,'On-air · '+(s.active.name||plName(s.active.playlist))); }
+  else if(!s.count){ el.className='sched-now off'; setText(t,'No blocks yet'); }
+  else { el.className='sched-now off'; setText(t,'Off-air (silent)'); }
+  // adopt the server's enabled value, but not during the grace window right after a local toggle
+  if(Date.now()>=enabledPendingUntil && typeof s.enabled==='boolean' && s.enabled!==schedEnabled){ schedEnabled=s.enabled; updateEnabledUi(); }
+  schedActiveId=s.active?s.active.id:null;
+}
+function renderLog(log){ const el=$('schedlog'); if(!el) return; if(!log||!log.length){ el.innerHTML=''; return; }
+  el.innerHTML=log.slice(0,5).map(l=>'<div class="lg">'+new Date(l.ts).toLocaleTimeString()+' · '+escapeHtml(l.msg)+'</div>').join(''); }
+async function loadSchedules(){
+  buildCalScaffold();
+  if(drag||$('blk-pop')||dirty) return;          // don't clobber a drag, an open editor, or unsaved local edits
+  try{
+    const r=await fetch('/api/schedules'); const j=await r.json();
+    blocks=(j.blocks||[]).map(b=>({...b})); schedEnabled=j.enabled!==false; schedActiveId=j.activeId||null;
+    updateEnabledUi(); renderPalette(); renderCols(); renderLog(j.log);
+    updateSchedStatus({enabled:schedEnabled, count:blocks.length, active:schedActiveId?(blocks.find(b=>b.id===schedActiveId)||null):null});
+  }catch(e){}
+}
+/* ---- audio processing: loudness leveling (librespot normalisation) ---- */
+function updateAudioUi(a){
+  if(!a) return;
+  const on=$('norm-on'), ctl=$('sndctl'), g=$('norm-gain');
+  if(on && document.activeElement!==on) on.checked=!!a.normalize;
+  if(ctl) ctl.classList.toggle('off', !a.normalize);
+  if(g && document.activeElement!==g && a.pregain!=null) g.value=a.pregain;
+  const pg=(g?+g.value:(a.pregain||0)); setText($('norm-gain-v'), (pg>0?'+':'')+pg+' dB');
+}
+let audioApplyT=null;
+function applyAudio(patch){
+  clearTimeout(audioApplyT);
+  audioApplyT=setTimeout(async()=>{
+    toast('Applying sound settings — stream re-buffers briefly…', 3800);
+    try{ const r=await fetch('/api/audio',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(patch)});
+      const j=await r.json(); if(r.ok) updateAudioUi(j); else toast('Could not apply sound settings');
+    }catch(e){ toast('Could not apply sound settings'); }
+  }, 250);
+}
+if($('norm-on')) $('norm-on').addEventListener('change',()=>{ const on=$('norm-on').checked; $('sndctl').classList.toggle('off',!on); applyAudio({normalize:on}); });
+if($('norm-gain')){
+  $('norm-gain').addEventListener('input',()=>{ const v=+$('norm-gain').value; setText($('norm-gain-v'),(v>0?'+':'')+v+' dB'); });   // live label
+  $('norm-gain').addEventListener('change',()=>{ applyAudio({pregain:+$('norm-gain').value}); });                                    // apply on release
+}
+async function loadAudio(){ try{ const r=await fetch('/api/audio'); if(r.ok) updateAudioUi(await r.json()); }catch(e){} }
+
+setInterval(renderNowLine,30000);
+// keep an open block popover glued to its block when the calendar/page scrolls or the window resizes
+function repositionPop(){ const p=$('blk-pop'); if(p&&selBlockId) positionPop(p,selBlockId); }
+addEventListener('resize',repositionPop);
+addEventListener('scroll',repositionPop,true);   // capture => also catches the inner .cal-scroll container
+function setToggleIcon(playing){const i=$('toggleico');if(i)i.textContent=playing?'pause':'play_arrow';}
+async function postAct(url){try{const r=await fetch(url,{method:'POST'});return {ok:r.ok,status:r.status,j:await r.json().catch(()=>({}))};}catch(e){return {ok:false,status:0,j:{}};}}
+let toggleBusy=false;
+$('toggle').onclick=async()=>{
+  if(toggleBusy) return;                        // block rapid clicks from queueing opposing pause/resume commands
+  const playing=(np&&np.state==='playing');
+  toggleBusy=true; lastToggleAt=Date.now();
+  setToggleIcon(!playing);
+  if(np){ np.state=playing?'paused':'playing'; np.progress=expectedPos(); np.at=Date.now(); } // optimistic; re-anchor interp
+  const r=await postAct(playing?'/api/pause':'/api/resume');
+  lastToggleAt=Date.now();                       // extend the guard across the round-trip
+  if(!r.ok){ setToggleIcon(playing); if(np)np.state=playing?'playing':'paused'; lastToggleAt=0;
+    toast(r.status===409?'Signage device offline':(playing?'Pause failed':'Resume failed')); }
+  else toast(playing?'Paused':'Playing');
+  toggleBusy=false;
+};
+$('prevbtn').onclick=async()=>{const r=await postAct('/api/previous');if(!r.ok)toast('Previous failed');refreshQueueSoon();};
+$('nextbtn').onclick=async()=>{const r=await postAct('/api/next');if(!r.ok)toast('Next failed');refreshQueueSoon();};
+$('topplay').onclick=async()=>{
+  const pl=$('pl-top').value; if(!pl){toast('Pick a playlist first');return;}
+  const sh=$('pl-shuffle')?$('pl-shuffle').checked:false;
+  try{
+    const r=await fetch('/api/play',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({playlist:pl,shuffle:sh})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok){toast('▶ Playing on '+(j.device||'Signage'));setToggleIcon(true);lastToggleAt=Date.now();if(np)np.state='playing';refreshQueueSoon();}
+    else if(r.status===409) toast('Signage device offline — start the stream service');
+    else if(r.status===401) toast('Connect Spotify first');
+    else if(r.status===429) toast('Spotify busy — try again shortly');
+    else toast('Play failed: '+(j.error||r.status));
+  }catch(e){toast('Play failed');}
+};
+
+$('playbtn').onclick=async()=>{
+  const pl=$('pl-select').value; if(!pl){toast('Pick a playlist first');return;}
+  const btn=$('playbtn');btn.disabled=true;
+  try{
+    const r=await fetch('/api/play',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({playlist:pl,shuffle:$('pl-shuffle').checked})});
+    const j=await r.json().catch(()=>({}));
+    if(r.ok){ toast('▶ Playing on '+(j.device||'Signage')); setToggleIcon(true); lastToggleAt=Date.now(); if(np)np.state='playing'; refreshQueueSoon(); }
+    else if(r.status===409) toast('Signage device offline — start the stream service');
+    else if(r.status===401) toast('Connect Spotify first');
+    else if(r.status===429) toast('Spotify busy — try again in a moment');
+    else toast('Play failed: '+(j.error||r.status));
+  }catch(e){toast('Play failed');}
+  btn.disabled=false;
+};
+$('pausebtn').onclick=async()=>{try{const r=await fetch('/api/pause',{method:'POST'});
+  if(r.ok){lastToggleAt=Date.now();if(np)np.state='paused';setToggleIcon(false);toast('Paused');}else toast('Pause failed');}catch(e){toast('Pause failed');}};
+
+/* (schedule rendering lives in the weekly-timeline calendar block above) */
+
+/* ---------------- Up Next / queue (keyed reconcile, no innerHTML thrash) --------------- */
+function unRow(){
+  const li=document.createElement('li'); li.className='un-item';
+  li.innerHTML='<span class="un-idx"></span>'+
+    '<span class="un-art"><span class="msr">music_note</span></span>'+
+    '<div class="un-meta"><div class="un-title"></div><div class="un-artist"></div></div>'+
+    '<span class="un-dur"></span>';
+  li.addEventListener('animationend',()=>li.classList.remove('enter'),{once:true});
+  return li;
+}
+function unFill(li,t,i){
+  const idx=li.querySelector('.un-idx'); const s=String(i+1); if(idx.textContent!==s)idx.textContent=s;
+  const artEl=li.querySelector('.un-art');
+  if(t.art){ let img=artEl.querySelector('img');
+    if(!img){ artEl.innerHTML=''; img=document.createElement('img'); img.alt=''; artEl.appendChild(img); }
+    if(img.getAttribute('src')!==t.art) img.setAttribute('src',t.art); }
+  else if(!artEl.querySelector('.msr')){ artEl.innerHTML='<span class="msr">music_note</span>'; }
+  const ti=li.querySelector('.un-title'); const nm=t.name||'—'; if(ti.textContent!==nm)ti.textContent=nm;
+  const ar=li.querySelector('.un-artist'); const a=t.artists||''; if(ar.textContent!==a)ar.textContent=a;
+  const du=li.querySelector('.un-dur'); const dr=t.duration?fmt(t.duration):''; if(du.textContent!==dr)du.textContent=dr;
+}
+function renderQueue(q){
+  const box=$('upnext'), list=$('un-list');
+  const items=(q&&q.items)||[];                 // show the full queue Spotify returned (list scrolls); don't truncate to 6
+  if(!items.length){ box.hidden=true; return; }
+  box.hidden=false;
+  setText($('un-count'), items.length+' queued');
+  const seen={}, keys=items.map(t=>{ const id=t.id||t.name||'x'; const n=(seen[id]=(seen[id]||0)+1); return id+'#'+n; });
+  const existing=new Map(); [...list.children].forEach(li=>existing.set(li.dataset.k,li));
+  const used=new Set();
+  items.forEach((t,i)=>{
+    let li=existing.get(keys[i]);
+    if(!li){ li=unRow(); li.dataset.k=keys[i]; li.classList.add('enter'); }
+    used.add(keys[i]); unFill(li,t,i);
+    if(list.children[i]!==li) list.insertBefore(li, list.children[i]||null);
+  });
+  [...list.children].forEach(li=>{ if(!used.has(li.dataset.k)) li.remove(); });
+}
+async function loadQueue(){ try{ const r=await fetch('/api/queue'); if(!r.ok) return; renderQueue(await r.json()); }catch(e){} }
+function refreshQueueSoon(){ setTimeout(loadQueue,900); }   // let Spotify settle after a transport command
+
+/* auth */
+let authPollT=null;
+function updateAuth(a){
+  const connected=a&&a.connected;
+  $('authbanner').classList.toggle('show',!connected);
+  const cc=$('controlcard'); if(cc){cc.style.opacity=connected?'1':'.55';cc.style.pointerEvents=connected?'auto':'none';}
+  const av=$('avatar'); if(av){ av.classList.toggle('linked',!!connected);
+    const face=av.querySelector('.msr,.ava-init');
+    const initial=(connected&&a.user)?String(a.user).trim().charAt(0).toUpperCase():'';
+    if(face){ if(initial){ setText(face,initial); face.className='ava-init'; } else if(!connected){ setText(face,'person'); face.className='msr'; } }
+    av.setAttribute('data-tip', connected?('Spotify · '+(a.user||'linked')):'Spotify · not linked'); av.removeAttribute('title'); }
+}
+async function refreshAuth(){try{const r=await fetch('/api/auth/status');updateAuth(await r.json());}catch(e){}}
+$('connectbtn').onclick=async()=>{
+  const btn=$('connectbtn');btn.disabled=true;btn.innerHTML='<span class="msr" style="font-size:18px">hourglass_empty</span>Starting…';
+  try{
+    const r=await fetch('/api/auth/start',{method:'POST'});const j=await r.json();
+    if(!j.login_url) throw 0;
+    window.open(j.login_url,'_blank','noopener');
+    $('ban-t').textContent='Approve in the Spotify tab that just opened';
+    $('ban-s').innerHTML='After you tap <b>Agree</b>, your browser will warn “connection not private” on <b>'+escapeHtml(location.hostname)+'</b> — that’s your own server’s certificate. Click <b>Advanced → Proceed</b>. This banner clears itself once linked.';
+    btn.innerHTML='<span class="msr" style="font-size:18px">hourglass_top</span>Waiting…';
+    if(authPollT)clearInterval(authPollT);
+    authPollT=setInterval(async()=>{try{const s=await(await fetch('/api/auth/status')).json();
+      if(s.connected){clearInterval(authPollT);updateAuth(s);toast('Spotify connected ✓');loadPlaylists();loadSchedules();loadQueue();
+        btn.disabled=false;btn.innerHTML='<span class="msr" style="font-size:18px">link</span>Connect Spotify';}}catch(e){}
+    },3000);
+    setTimeout(()=>{if(authPollT){clearInterval(authPollT);btn.disabled=false;btn.innerHTML='<span class="msr" style="font-size:18px">link</span>Connect Spotify';}},600000);
+  }catch(e){toast('Could not start login');btn.disabled=false;btn.innerHTML='<span class="msr" style="font-size:18px">link</span>Connect Spotify';}
+};
+
+loadPlaylists();loadSchedules();refreshAuth();loadQueue();loadAudio();
+setInterval(loadSchedules,30000);
+setInterval(loadQueue,8000);
+
+/* ===================== Material interaction layer ===================== */
+// count-up animation for numeric KPIs
+function animNum(el,to){ if(!el)return; to=+to||0; const from=+(el.dataset.v||0); el.dataset.v=to;
+  if(from===to){el.textContent=to;return;}
+  const t0=performance.now();
+  (function step(t){const k=Math.min(1,(t-t0)/500);const e=1-Math.pow(1-k,3);el.textContent=Math.round(from+(to-from)*e);if(k<1)requestAnimationFrame(step);})(performance.now());
+}
+// app-bar elevation on scroll
+const _tb=document.querySelector('.topbar');
+addEventListener('scroll',()=>{ if(_tb)_tb.classList.toggle('scrolled',(window.scrollY||0)>4); },{passive:true});
+// (touch-ripple effect removed — it expanded to ~2.6× and read as the button "growing" on click)
+// upgrade native title="" to custom Material tooltip (avoids double tooltips)
+(function(){document.querySelectorAll('[title]').forEach(el=>{const v=el.getAttribute('title'); if(v){el.setAttribute('data-tip',v); el.removeAttribute('title');}});})();
+// avatar → connect when unlinked, else confirm status
+(function(){const av=$('avatar'); if(av)av.onclick=()=>{ if(av.classList.contains('linked'))toast('Spotify account is linked ✓'); else{const cb=$('connectbtn'); if(cb)cb.click();} };})();
+</script>
+</body>
+</html>

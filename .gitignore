@@ -1,0 +1,19 @@
+# dependencies (reinstall with `npm install`)
+node_modules/
+
+# runtime secrets / config — these live in ~/.config/spotify-signage and must NEVER be committed
+*.env
+.env
+token.json
+*.pem
+*.key
+*.crt
+*.p12
+config/
+secrets/
+
+# logs & OS cruft
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
