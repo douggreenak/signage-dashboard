@@ -5,12 +5,28 @@ BrightSign digital sign (and optionally Sonos). Everything — playback control 
 audio stream — runs on this one box. There's a web dashboard for control, a weekly
 drag‑to‑paint schedule, loudness leveling, and live status.
 
+> **Built 100% with Claude Code** — every line of code, every feature, every architectural decision.
+
 ```
 Spotify ──▶ librespot ──▶ relay.py ──▶ ffmpeg ──▶ Icecast2 ──▶ BrightSign / Sonos
 "Signage"    (pipe)     (real-time)   (MP3 128k)   /spotify.mp3     (LAN players)
    ▲
    └── controlled by the dashboard (Spotify Web API) + the weekly schedule
 ```
+
+## Screenshots
+
+| Dashboard — light | Dashboard — dark |
+|:---:|:---:|
+| ![Dashboard in light mode](docs/screenshots/dashboard-light.png) | ![Dashboard in dark mode](docs/screenshots/dashboard-dark.png) |
+
+**Weekly drag‑to‑paint schedule**
+
+![Weekly playback schedule](docs/screenshots/schedule.png)
+
+**Responsive on mobile**
+
+<img src="docs/screenshots/mobile.png" alt="Dashboard on a phone" width="320">
 
 ## Quick reference
 
@@ -69,7 +85,7 @@ that starts the right playlist during each scheduled block and pauses in the gap
   `signage-play "<playlist url>"`). Playback loops (repeat = context).
 - **Schedule playback:** dashboard → *Playback & Scheduling* → paint blocks on the week. See
   [SCHEDULING.md](docs/SCHEDULING.md).
-- **Smooth out volume between songs:** dashboard → *Live Output Level* → **Loudness leveling**.
+- **Smooth out volume between songs:** dashboard → *Stream Output* → **Loudness leveling**.
   See [AUDIO.md](docs/AUDIO.md).
 - **Reconnect Spotify:** dashboard → **Connect Spotify** banner. See
   [AUTHENTICATION.md](docs/AUTHENTICATION.md).
