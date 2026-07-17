@@ -144,6 +144,13 @@ async function setRepeatContext(){
   try{ const dev=await findDevice(); const q=dev?('&device_id='+dev.id):'';
     await api('/me/player/repeat?state=context'+q,{method:'PUT'}); }catch(e){}
 }
+// Pull playback onto the Signage device WITHOUT restarting the context (keeps current track + position).
+// Used when playback has drifted to another device — e.g. a phone that joined a Spotify Jam on the account.
+async function transferToSignage(){
+  const dev=await findDevice(); if(!dev) return false;
+  const r=await api('/me/player',{method:'PUT',body:{device_ids:[dev.id],play:true}});
+  return r.ok;
+}
 async function skip(dir){
   const dev=await findDevice(); const q=dev?('?device_id='+dev.id):'';
   const r=await api('/me/player/'+dir+q,{method:'POST'});
@@ -302,10 +309,15 @@ async function reconcile(){
     if(Date.now()<manualUntil) return;                     // inside a manual-override window — leave playback alone
     const p=await nowPlaying();                            // cached (~3s) — cheap; used only to detect drift
     if(block){
-      const ctxMatch = p && p.contextId===block.playlist;
-      if(ctxMatch && p.state==='playing'){ if(p.repeat!=='context') await setRepeatContext(); return; }  // already correct — just ensure it loops at the end, never restart
-      if(ctxMatch && p.state==='paused'){ try{ await resumePlayback(); }catch(e){} return; }        // resume in place, keep position
-      try{ const r=await playPlaylist(block.playlist, block.shuffle); if(changed) slog(`▶ "${block.name||r.playlist}" started (scheduled)`); } // idle / wrong / different context => (re)start
+      const onSignage = !!(p && p.device===DEVICE_NAME);   // is playback actually on OUR device (not a phone)?
+      const ctxMatch  = !!(p && p.contextId===block.playlist);
+      if(ctxMatch && onSignage && p.state==='playing'){ if(p.repeat!=='context') await setRepeatContext(); return; }  // correct — ensure it loops, never restart
+      if(ctxMatch && onSignage && p.state==='paused'){ try{ await resumePlayback(); }catch(e){} return; }             // resume in place, keep position
+      if(ctxMatch && !onSignage){                          // right playlist but drifted to another device (Spotify Jam / phone) => reclaim it, keeping position
+        try{ if(await transferToSignage()){ await setRepeatContext(); slog(`▶ reclaimed playback on Signage (was on "${(p&&p.device)||'another device'}")`); } }catch(e){}
+        return;
+      }
+      try{ const r=await playPlaylist(block.playlist, block.shuffle); if(changed) slog(`▶ "${block.name||r.playlist}" started (scheduled)`); } // idle / wrong context => start the scheduled playlist
       catch(e){ if(changed) slog(`✗ block "${block.name||block.playlist}" failed: ${e.code||e.message}`); }
     } else {
       if(p && p.state==='playing'){ try{ await pausePlayback(); if(changed) slog('⏸ paused — no block scheduled'); }catch(e){} }  // gap: keep it silent
