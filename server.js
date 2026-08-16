@@ -289,6 +289,24 @@ const MANUAL_WINDOW=4*60*60*1000;
 function noteManual(){ manualUntil=Date.now()+MANUAL_WINDOW; }
 function resetSlot(){ lastSlotKey=null; }   // force the next tick to re-evaluate (without treating it as a genuine slot change)
 
+/* Self-heal watchdog: librespot's dealer websocket occasionally dies without reconnecting
+   (seen: "Websocket peer does not respond" then silence) — the process stays alive but drops off
+   Spotify's Connect device list, so playPlaylist()/findDevice() sees no "Signage" device forever
+   until something restarts it. Cooldown-gated so a real outage (Spotify down, network down) can't
+   trigger a restart loop; ~10s after a restart librespot re-authenticates and re-registers the
+   device (observed), well within the next 15s reconcile tick, so no extra retry logic is needed. */
+let lastStreamHeal=0;
+const STREAM_HEAL_COOLDOWN=5*60*1000;
+async function healStream(){
+  const now=Date.now();
+  if(now-lastStreamHeal<STREAM_HEAL_COOLDOWN) return;
+  lastStreamHeal=now;
+  slog('⟳ Signage device offline — restarting spotify-stream.service to recover');
+  const r=await sh(`${USERENV} systemctl --user restart spotify-stream.service`, 15000);
+  slog(r.err ? `✗ spotify-stream.service restart failed: ${(r.stderr||r.err.message||'').slice(0,120)}`
+             : '✓ spotify-stream.service restarted — should rejoin as a Connect device within ~15s');
+}
+
 async function reconcile(){
   if(reconcileBusy) return; reconcileBusy=true;
   try{
@@ -318,7 +336,10 @@ async function reconcile(){
         return;
       }
       try{ const r=await playPlaylist(block.playlist, block.shuffle); if(changed) slog(`▶ "${block.name||r.playlist}" started (scheduled)`); } // idle / wrong context => start the scheduled playlist
-      catch(e){ if(changed) slog(`✗ block "${block.name||block.playlist}" failed: ${e.code||e.message}`); }
+      catch(e){
+        if(changed) slog(`✗ block "${block.name||block.playlist}" failed: ${e.code||e.message}`);
+        if(e.code==='device-offline') await healStream();   // self-heal: see healStream() above
+      }
     } else {
       if(p && p.state==='playing'){ try{ await pausePlayback(); if(changed) slog('⏸ paused — no block scheduled'); }catch(e){} }  // gap: keep it silent
     }

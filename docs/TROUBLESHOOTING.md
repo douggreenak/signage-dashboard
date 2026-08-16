@@ -160,6 +160,7 @@ systemctl --user status spotify-stream.service --no-pager
 
 | Cause | Fix |
 | --- | --- |
+| librespot's dealer websocket died without reconnecting (**the common case**, see below). | Automatic — the reconciler restarts `spotify-stream.service` itself. See **Auto self-heal** below. |
 | The stream pipeline is down (so librespot isn't running). | `systemctl --user restart spotify-stream.service`, wait ~10 s, retry Play. |
 | librespot is running but hasn't finished registering with Spotify Connect. | Wait ~10–20 s after a restart and retry; watch the log for `Authenticated as`. |
 | librespot can't authenticate (bad/expired cache, network). | Restart the stream; check the log for auth errors. Cache lives at `/home/jellyfin/.cache/librespot`. |
@@ -167,6 +168,26 @@ systemctl --user status spotify-stream.service --no-pager
 
 Note: librespot always launches with `--disable-discovery` and the fixed name `Signage`, so the
 device name never changes — if `Signage` is absent, librespot is simply not up or not logged in.
+
+**Root cause of the common case (confirmed Aug 2026):** librespot's websocket connection to
+Spotify's dealer service can die (log shows `WARN librespot_core::dealer] Websocket peer does not
+respond.`) and, unlike a normal disconnect, never reconnect. The **process stays alive** (so
+`systemctl` shows it `active (running)` and `librespot.authed:true` on the dashboard) but it
+silently falls off Spotify's Connect device list — `GET /me/player/devices` returns `[]` — so
+every scheduled block fails with `device-offline` until something restarts the process. Because
+the process never exits, `Restart=always` in the systemd unit does **not** catch this; only an
+external check that actually asks Spotify "is the device there?" can.
+
+**Auto self-heal:** `reconcile()` in `server.js` does exactly that — when a scheduled block's
+`playPlaylist()` fails with `device-offline`, it calls `healStream()`, which runs
+`systemctl --user restart spotify-stream.service` (cooldown-gated to once per 5 minutes so a real
+outage can't trigger a restart loop) and logs `⟳ Signage device offline — restarting
+spotify-stream.service to recover` / `✓ ... restarted` to the scheduler log (`GET /api/schedules`
+→ `log`, also shown in the dashboard's activity feed). librespot typically re-registers as
+`Signage` within ~10 s of the restart, well inside the next 15 s reconcile tick, so playback
+resumes on its own — no manual restart needed anymore. If the log shows repeated heal attempts
+within a 5-minute window without recovering, that points to a deeper problem (Spotify outage,
+network, or bad auth) — check the causes further up this table.
 
 ---
 

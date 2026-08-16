@@ -251,6 +251,15 @@ pause; if playback dies mid-block it self-heals. A dashboard Play/Pause arms a
 **4-hour manual-override window** (cleared at the next genuine slot change) so
 ad-hoc control isn't instantly overridden.
 
+**Watchdog for the "device vanished" failure mode:** librespot's dealer websocket can die without
+reconnecting — the process stays alive (so systemd's `Restart=always` never triggers) but the
+`Signage` Connect device silently disappears from Spotify's device list, and every scheduled
+`playPlaylist()` fails with `device-offline`. When the reconciler sees that error it calls
+`healStream()`, which runs `systemctl --user restart spotify-stream.service` (cooldown-gated to
+once per 5 minutes) and logs the attempt to the scheduler log. librespot re-registers within
+~10 s, so the next 15 s tick finds the device again and playback resumes with no manual
+intervention. See `docs/TROUBLESHOOTING.md` §"Signage device offline".
+
 Endpoints: `GET /api/schedules`, `PUT /api/schedules {enabled?, blocks}`
 (replaces the whole timeline), `POST /api/schedules/enabled {enabled}`. Edits
 apply within ~15 s (the next tick), with no mid-edit audio thrash.
