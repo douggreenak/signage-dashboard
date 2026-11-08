@@ -668,3 +668,12 @@ curl -s -X POST http://172.16.50.100:8088/api/audio \
 | POST | `/api/schedules/enabled` | Toggle automation | `{ enabled }` |
 | GET | `/api/audio` | Read loudness settings | — |
 | POST | `/api/audio` | Update settings + restart stream | `{ normalize?, pregain?, gainType?, method? }` |
+
+## `POST /api/restart-services`
+
+Restarts every service for this project: `icecast2` (via `sudo -n systemctl`, so the
+`jellyfin` user needs passwordless sudo for that command), `spotify-stream.service`, and
+finally `signage-dashboard.service` itself (~0.6 s after the response is sent). Returns
+`{ok, results:{icecast2, stream}, dashboard:"restarting"}`; `500` if a restart failed,
+`409` if one is already in progress. Audio drops for a few seconds. Wired to the restart
+button in the dashboard's top bar.

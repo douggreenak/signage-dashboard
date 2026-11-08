@@ -517,6 +517,26 @@ app.get('/api/stream',(req,res)=>{
   req.on('close',()=>{ sseClients.delete(res); if(!sseClients.size) sseStopTimers(); });  // last viewer left -> stop the status timer
 });
 
+/* ---- restart all project services: icecast2 (system, needs passwordless sudo), the audio pipeline,
+        then this dashboard itself (detached + delayed so the HTTP response gets out first) ---- */
+let restarting=false;
+app.post('/api/restart-services',async(req,res)=>{
+  if(restarting) return res.status(409).json({error:'restart-in-progress'});
+  restarting=true; setTimeout(()=>{ restarting=false; },30000);
+  const results={};
+  const ice=await sh('sudo -n systemctl restart icecast2',20000);
+  results.icecast2=ice.err?('failed: '+(ice.stderr||ice.err.message)):'restarted';
+  const st=await sh(`${USERENV} systemctl --user restart spotify-stream.service`,20000);
+  results.stream=st.err?('failed: '+(st.stderr||st.err.message)):'restarted';
+  svcCache=null; iceCache=null; lrCache=null;
+  const ok=!ice.err && !st.err;
+  res.status(ok?200:500).json({ok,results,dashboard:'restarting'});
+  setTimeout(()=>{
+    const p=spawn('/bin/sh',['-c',`${USERENV} systemctl --user restart signage-dashboard.service`],{detached:true,stdio:'ignore'});
+    p.unref();
+  },600);
+});
+
 // auth
 app.get('/api/auth/status',(req,res)=>res.json(authStatus()));
 app.post('/api/auth/start',async(req,res)=>{ try{ res.json(await startAuth()); }catch(e){ res.status(500).json({error:String(e.message||e)}); } });

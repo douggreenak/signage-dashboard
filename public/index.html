@@ -718,6 +718,7 @@ html[data-theme="dark"] body::before{background:radial-gradient(1200px 560px at 
     <div class="sub">Spotify · BrightSign · Sonos</div>
     <div class="spacer"></div>
     <button class="iconbtn" id="themebtn" title="Toggle dark mode" aria-label="Toggle dark mode"><span class="msr" id="themeicon">dark_mode</span></button>
+    <button class="iconbtn" id="restartbtn" title="Restart all services" aria-label="Restart all services"><span class="msr" id="restarticon">restart_alt</span></button>
     <div class="clock" id="clock">--:--:--</div>
     <div class="status" id="livepill"><span class="dot"></span><span id="livetext">Connecting…</span></div>
     <button class="avatar" id="avatar" title="Spotify account" aria-label="Spotify account"><span class="msr">person</span><span class="dotstat"></span></button>
@@ -1505,6 +1506,17 @@ $('playbtn').onclick=async()=>{
     else toast('Play failed: '+(j.error||r.status));
   }catch(e){toast('Play failed');}
   btn.disabled=false;
+};
+$('restartbtn').onclick=async()=>{
+  if(!confirm('Restart all services (Icecast, audio stream, and this dashboard)?\n\nAudio will drop for a few seconds.')) return;
+  const b=$('restartbtn'); b.disabled=true; toast('Restarting services…',6000);
+  try{
+    const r=await fetch('/api/restart-services',{method:'POST'}); const j=await r.json().catch(()=>({}));
+    if(!r.ok){ const f=Object.entries(j.results||{}).filter(([k,v])=>v!=='restarted').map(([k,v])=>k+' '+v).join('; ');
+      toast('Restart problem: '+(f||j.error||r.status),6000); }
+    else toast('Services restarted — dashboard reloading…',5000);
+  }catch(e){ toast('Dashboard restarting…',5000); }
+  setTimeout(()=>location.reload(),6000);
 };
 $('pausebtn').onclick=async()=>{try{const r=await fetch('/api/pause',{method:'POST'});
   if(r.ok){lastToggleAt=Date.now();if(np)np.state='paused';setToggleIcon(false);toast('Paused');}else toast('Pause failed');}catch(e){toast('Pause failed');}};
