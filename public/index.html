@@ -42,6 +42,8 @@ html[data-theme="dark"] .node.warnode .ico .msr{color:var(--amber)}
 .iconbtn:hover{background:var(--surface-3);color:var(--text)}
 .iconbtn:active{transform:scale(.94)}
 .iconbtn .msr{font-size:20px}
+.appsbtn{width:auto;border-radius:20px;padding:0 16px 0 12px;display:inline-flex;align-items:center;gap:8px;text-decoration:none;font:500 14px/1 "Roboto Flex",system-ui,sans-serif}
+@media(max-width:640px){.appsbtn span:last-child{display:none}.appsbtn{padding:0;width:40px;justify-content:center}}
 *{box-sizing:border-box}
 html,body{margin:0;height:100%}
 body{font-family:"Roboto","Roboto Flex",system-ui,Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased}
@@ -717,6 +719,7 @@ html[data-theme="dark"] body::before{background:radial-gradient(1200px 560px at 
     <div class="title">Audio Flow <b>Console</b></div>
     <div class="sub">Spotify · BrightSign · Sonos</div>
     <div class="spacer"></div>
+    <a class="iconbtn appsbtn" id="appsbtn" title="Services hub — all apps"><span class="msr">apps</span><span>Apps</span></a>
     <button class="iconbtn" id="themebtn" title="Toggle dark mode" aria-label="Toggle dark mode"><span class="msr" id="themeicon">dark_mode</span></button>
     <button class="iconbtn" id="restartbtn" title="Restart all services" aria-label="Restart all services"><span class="msr" id="restarticon">restart_alt</span></button>
     <div class="clock" id="clock">--:--:--</div>
@@ -1615,5 +1618,6 @@ addEventListener('scroll',()=>{ if(_tb)_tb.classList.toggle('scrolled',(window.s
 // avatar → connect when unlinked, else confirm status
 (function(){const av=$('avatar'); if(av)av.onclick=()=>{ if(av.classList.contains('linked'))toast('Spotify account is linked ✓'); else{const cb=$('connectbtn'); if(cb)cb.click();} };})();
 </script>
+<script>document.getElementById('appsbtn').href='http://'+location.hostname+':8090/apps'</script>
 </body>
 </html>
