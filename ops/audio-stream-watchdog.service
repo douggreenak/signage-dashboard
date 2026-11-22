@@ -1,0 +1,7 @@
+[Unit]
+Description=Check the signage audio stream really works (Icecast + source) and recover it
+
+[Service]
+Type=oneshot
+ExecStart=%h/.local/bin/audio-stream-watchdog.sh
+TimeoutStartSec=90

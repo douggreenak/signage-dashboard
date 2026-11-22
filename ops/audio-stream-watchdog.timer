@@ -1,0 +1,10 @@
+[Unit]
+Description=Check the signage audio stream every minute
+
+[Timer]
+OnBootSec=90
+OnUnitActiveSec=60
+AccuracySec=5s
+
+[Install]
+WantedBy=timers.target
